@@ -156,7 +156,7 @@ const toggleTaskCompletion = async (req, res) => {
       return res.status(404).json({ message: 'Task not found' });
     }
 
-    // Find or create task progress for today
+    // Find existing task progress for today
     let taskProgress = await TaskProgress.findOne({
       user: req.user.userId,
       task: taskId,
@@ -164,6 +164,7 @@ const toggleTaskCompletion = async (req, res) => {
     });
 
     if (!taskProgress) {
+      // No existing progress, create new completed record
       taskProgress = new TaskProgress({
         user: req.user.userId,
         task: taskId,
@@ -171,13 +172,27 @@ const toggleTaskCompletion = async (req, res) => {
         completed: true,
         completedAt: new Date()
       });
+      await taskProgress.save();
+      res.json(taskProgress);
     } else {
-      taskProgress.completed = !taskProgress.completed;
-      taskProgress.completedAt = taskProgress.completed ? new Date() : null;
+      // Existing progress found
+      if (taskProgress.completed) {
+        // Task is currently completed, unmark it by deleting the progress record
+        await TaskProgress.findByIdAndDelete(taskProgress._id);
+        res.json({ 
+          message: 'Task unmarked and progress deleted',
+          deleted: true,
+          taskId: taskId,
+          date: today
+        });
+      } else {
+        // Task is not completed, mark it as completed
+        taskProgress.completed = true;
+        taskProgress.completedAt = new Date();
+        await taskProgress.save();
+        res.json(taskProgress);
+      }
     }
-
-    await taskProgress.save();
-    res.json(taskProgress);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });

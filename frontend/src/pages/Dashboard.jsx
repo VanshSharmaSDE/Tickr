@@ -217,11 +217,37 @@ const Dashboard = () => {
   }, [tasks]);
 
   const handleTaskToggle = async (taskId) => {
-    await toggleTask(taskId);
-    
-    // Update local progress state
-    const response = await taskService.getTodayProgress();
-    setTodayProgress(response.data);
+    try {
+      // Optimistic update - instantly update UI
+      const currentCompleted = isTaskCompleted(taskId);
+      
+      if (currentCompleted) {
+        // Remove from completed tasks instantly
+        setTodayProgress(prev => prev.filter(progress => progress.task._id !== taskId));
+      } else {
+        // Add to completed tasks instantly
+        const task = tasks.find(t => t._id === taskId);
+        if (task) {
+          setTodayProgress(prev => [...prev, { 
+            task: task, 
+            completed: true, 
+            completedAt: new Date().toISOString() 
+          }]);
+        }
+      }
+      
+      // Then update the backend in the background
+      await toggleTask(taskId);
+    } catch (error) {
+      console.error('Error toggling task:', error);
+      // If API call fails, revert the optimistic update
+      try {
+        const response = await taskService.getTodayProgress();
+        setTodayProgress(response.data);
+      } catch (revertError) {
+        console.error('Error reverting state:', revertError);
+      }
+    }
   };
 
   const isTaskCompleted = (taskId) => {
