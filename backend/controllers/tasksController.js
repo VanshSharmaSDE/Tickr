@@ -149,6 +149,7 @@ const toggleTaskCompletion = async (req, res) => {
     today.setHours(0, 0, 0, 0);
 
     console.log('Toggle task - India date:', today.toDateString(), today.toISOString());
+    console.log('Toggle task - TaskId:', taskId, 'UserId:', req.user.userId);
 
     // Check if task belongs to user
     const task = await Task.findOne({ _id: taskId, user: req.user.userId });
@@ -163,8 +164,18 @@ const toggleTaskCompletion = async (req, res) => {
       date: today
     });
 
+    console.log('Toggle task - Existing progress found:', !!taskProgress);
+    if (taskProgress) {
+      console.log('Toggle task - Existing progress details:', {
+        id: taskProgress._id,
+        completed: taskProgress.completed,
+        date: taskProgress.date.toISOString()
+      });
+    }
+
     if (!taskProgress) {
       // No existing progress, create new completed record
+      console.log('Toggle task - Creating new TaskProgress record');
       taskProgress = new TaskProgress({
         user: req.user.userId,
         task: taskId,
@@ -172,13 +183,31 @@ const toggleTaskCompletion = async (req, res) => {
         completed: true,
         completedAt: new Date()
       });
-      await taskProgress.save();
-      res.json(taskProgress);
+      
+      const savedProgress = await taskProgress.save();
+      console.log('Toggle task - Saved new progress:', {
+        id: savedProgress._id,
+        completed: savedProgress.completed,
+        date: savedProgress.date.toISOString(),
+        completedAt: savedProgress.completedAt
+      });
+      
+      // Update task's isCompleted status
+      await Task.findByIdAndUpdate(taskId, { isCompleted: true });
+      console.log('Toggle task - Updated task isCompleted to true');
+      
+      res.json(savedProgress);
     } else {
       // Existing progress found
       if (taskProgress.completed) {
         // Task is currently completed, unmark it by deleting the progress record
+        console.log('Toggle task - Deleting existing progress record');
         await TaskProgress.findByIdAndDelete(taskProgress._id);
+        
+        // Update task's isCompleted status
+        await Task.findByIdAndUpdate(taskId, { isCompleted: false });
+        console.log('Toggle task - Updated task isCompleted to false');
+        
         res.json({ 
           message: 'Task unmarked and progress deleted',
           deleted: true,
@@ -187,15 +216,28 @@ const toggleTaskCompletion = async (req, res) => {
         });
       } else {
         // Task is not completed, mark it as completed
+        console.log('Toggle task - Updating existing progress to completed');
         taskProgress.completed = true;
         taskProgress.completedAt = new Date();
-        await taskProgress.save();
-        res.json(taskProgress);
+        
+        const savedProgress = await taskProgress.save();
+        console.log('Toggle task - Updated progress:', {
+          id: savedProgress._id,
+          completed: savedProgress.completed,
+          date: savedProgress.date.toISOString(),
+          completedAt: savedProgress.completedAt
+        });
+        
+        // Update task's isCompleted status
+        await Task.findByIdAndUpdate(taskId, { isCompleted: true });
+        console.log('Toggle task - Updated task isCompleted to true');
+        
+        res.json(savedProgress);
       }
     }
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Toggle task completion error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
@@ -209,18 +251,39 @@ const getTodayProgress = async (req, res) => {
     tomorrow.setDate(tomorrow.getDate() + 1);
 
     console.log('Get today progress - India date range:', today.toDateString(), 'to', tomorrow.toDateString());
+    console.log('Get today progress - Date range ISO:', today.toISOString(), 'to', tomorrow.toISOString());
+    console.log('Get today progress - User ID:', req.user.userId);
 
     const progress = await TaskProgress.find({
       user: req.user.userId,
-      date: {
-        $gte: today,
-        $lt: tomorrow
-      }
+      // date: {
+      //   $gte: today,
+      //   $lt: tomorrow
+      // }
     }).populate('task');
+
+    console.log('Get today progress - Found records:', progress.length);
+    console.log('Get today progress - Records details:', progress.map(p => ({
+      taskId: p.task?._id,
+      taskTitle: p.task?.title,
+      completed: p.completed,
+      date: p.date.toISOString(),
+      dateString: p.date.toDateString()
+    })));
+
+    // Also check all TaskProgress records for this user to debug
+    const allProgress = await TaskProgress.find({ user: req.user.userId }).populate('task');
+    console.log('All progress records for user:', allProgress.map(p => ({
+      taskId: p.task?._id,
+      taskTitle: p.task?.title,
+      completed: p.completed,
+      date: p.date.toISOString(),
+      dateString: p.date.toDateString()
+    })));
 
     res.json(progress);
   } catch (error) {
-    console.error(error);
+    console.error('getTodayProgress error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
