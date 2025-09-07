@@ -1,0 +1,194 @@
+import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import { authService } from '../services/authService';
+import toast from 'react-hot-toast';
+
+const AuthContext = createContext();
+
+const authReducer = (state, action) => {
+  switch (action.type) {
+    case 'LOGIN_START':
+      return {
+        ...state,
+        loading: true,
+        error: null,
+      };
+    case 'LOGIN_SUCCESS':
+      return {
+        ...state,
+        loading: false,
+        user: action.payload.user,
+        token: action.payload.token,
+        error: null,
+      };
+    case 'LOGIN_FAILURE':
+      return {
+        ...state,
+        loading: false,
+        user: null,
+        token: null,
+        error: action.payload,
+      };
+    case 'LOGOUT':
+      return {
+        ...state,
+        user: null,
+        token: null,
+        loading: false,
+        error: null,
+      };
+    case 'SET_LOADING':
+      return {
+        ...state,
+        loading: action.payload,
+      };
+    default:
+      return state;
+  }
+};
+
+const initialState = {
+  user: null,
+  token: localStorage.getItem('token'),
+  loading: true,
+  error: null,
+};
+
+export const AuthProvider = ({ children }) => {
+  const [state, dispatch] = useReducer(authReducer, initialState);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      // Verify token and get user profile
+      authService.getProfile()
+        .then(response => {
+          dispatch({
+            type: 'LOGIN_SUCCESS',
+            payload: {
+              user: response.data.user,
+              token: token,
+            },
+          });
+        })
+        .catch(() => {
+          localStorage.removeItem('token');
+          dispatch({ type: 'LOGOUT' });
+        })
+        .finally(() => {
+          dispatch({ type: 'SET_LOADING', payload: false });
+        });
+    } else {
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
+  }, []);
+
+  const login = async (email, password) => {
+    try {
+      dispatch({ type: 'LOGIN_START' });
+      
+      const response = await authService.login(email, password);
+      const { token, user } = response.data;
+      
+      localStorage.setItem('token', token);
+      
+      dispatch({
+        type: 'LOGIN_SUCCESS',
+        payload: { user, token },
+      });
+      
+      toast.success(`Welcome back, ${user.name}!`);
+      return { success: true };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Login failed';
+      dispatch({
+        type: 'LOGIN_FAILURE',
+        payload: message,
+      });
+      toast.error(message);
+      return { success: false, message };
+    }
+  };
+
+  const register = async (name, email, password) => {
+    try {
+      dispatch({ type: 'LOGIN_START' });
+      
+      const response = await authService.register(name, email, password);
+      const { token, user } = response.data;
+      
+      localStorage.setItem('token', token);
+      
+      dispatch({
+        type: 'LOGIN_SUCCESS',
+        payload: { user, token },
+      });
+      
+      toast.success(`Welcome to Tickr, ${user.name}!`);
+      return { success: true };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Registration failed';
+      dispatch({
+        type: 'LOGIN_FAILURE',
+        payload: message,
+      });
+      toast.error(message);
+      return { success: false, message };
+    }
+  };
+
+  const logout = () => {
+    localStorage.removeItem('token');
+    dispatch({ type: 'LOGOUT' });
+    toast.success('Logged out successfully');
+  };
+
+  const forgotPassword = async (email) => {
+    try {
+      await authService.forgotPassword(email);
+      toast.success('Password reset instructions sent to your email');
+      return { success: true };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to send reset email';
+      toast.error(message);
+      return { success: false, message };
+    }
+  };
+
+  const resetPassword = async (token, password) => {
+    try {
+      await authService.resetPassword(token, password);
+      toast.success('Password reset successfully');
+      return { success: true };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to reset password';
+      toast.error(message);
+      return { success: false, message };
+    }
+  };
+
+  const value = {
+    user: state.user,
+    token: state.token,
+    loading: state.loading,
+    error: state.error,
+    login,
+    register,
+    logout,
+    forgotPassword,
+    resetPassword,
+  };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
