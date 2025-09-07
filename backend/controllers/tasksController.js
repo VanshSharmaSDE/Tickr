@@ -256,10 +256,10 @@ const getTodayProgress = async (req, res) => {
 
     const progress = await TaskProgress.find({
       user: req.user.userId,
-      // date: {
-      //   $gte: today,
-      //   $lt: tomorrow
-      // }
+      date: {
+        $gte: today,
+        $lt: tomorrow
+      }
     }).populate('task');
 
     console.log('Get today progress - Found records:', progress.length);
