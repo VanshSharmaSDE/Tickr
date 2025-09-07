@@ -8,18 +8,24 @@
     "dev": "nodemon server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["task", "management", "daily", "tracker"],
+  "keywords": [
+    "task",
+    "management",
+    "daily",
+    "tracker"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.18.2",
-    "mongoose": "^7.5.0",
+    "axios": "^1.11.0",
+    "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
-    "bcryptjs": "^2.4.3",
+    "express": "^4.18.2",
     "jsonwebtoken": "^9.0.2",
-    "validator": "^13.11.0",
-    "nodemailer": "^6.9.4"
+    "mongoose": "^7.5.0",
+    "nodemailer": "^6.9.4",
+    "validator": "^13.11.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
