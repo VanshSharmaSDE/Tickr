@@ -26,6 +26,22 @@ app.use((err, req, res, next) => {
     res.status(500).json({ message: 'Something went wrong!' });
 });
 
+const url = process.env.BACKEND_URL; // Replace with your Render URL
+const interval = 600000; // Interval in milliseconds (10 minutes)
+
+//Pinging server
+function reloadWebsite() {
+  axios.get(url)
+    .then(response => {
+      console.log(`Reloaded at ${new Date().toISOString()}: Status Code ${response.status}`);
+    })
+    .catch(error => {
+      console.error(`Error reloading at ${new Date().toISOString()}: ${error.message}`);
+    });
+}
+
+setInterval(reloadWebsite, interval);
+
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
