@@ -193,8 +193,8 @@ const toggleTaskCompletion = async (req, res) => {
       });
       
       // Update task's isCompleted status
-      await Task.findByIdAndUpdate(taskId, { isCompleted: true });
-      console.log('Toggle task - Updated task isCompleted to true');
+      // await Task.findByIdAndUpdate(taskId, { isCompleted: true });
+      // console.log('Toggle task - Updated task isCompleted to true');
       
       res.json(savedProgress);
     } else {
@@ -205,8 +205,8 @@ const toggleTaskCompletion = async (req, res) => {
         await TaskProgress.findByIdAndDelete(taskProgress._id);
         
         // Update task's isCompleted status
-        await Task.findByIdAndUpdate(taskId, { isCompleted: false });
-        console.log('Toggle task - Updated task isCompleted to false');
+        // await Task.findByIdAndUpdate(taskId, { isCompleted: false });
+        // console.log('Toggle task - Updated task isCompleted to false');
         
         res.json({ 
           message: 'Task unmarked and progress deleted',
@@ -229,8 +229,8 @@ const toggleTaskCompletion = async (req, res) => {
         });
         
         // Update task's isCompleted status
-        await Task.findByIdAndUpdate(taskId, { isCompleted: true });
-        console.log('Toggle task - Updated task isCompleted to true');
+        // await Task.findByIdAndUpdate(taskId, { isCompleted: true });
+        // console.log('Toggle task - Updated task isCompleted to true');
         
         res.json(savedProgress);
       }
