@@ -81,25 +81,28 @@ const Analytics = () => {
 
   const formatDateForTrends = (dateString) => {
     try {
-      if (!dateString) return { short: '', full: '' };
+      if (!dateString) return '';
       const indianDate = toIndianTime(dateString);
       const day = indianDate.getUTCDate();
       const month = indianDate.getUTCMonth() + 1;
-      const year = indianDate.getUTCFullYear();
-      const dayOfWeek = indianDate.getUTCDay();
       
-      // Indian month names
-      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                         'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-      
-      return {
-        short: `${day}/${month}`,
-        full: `${weekdays[dayOfWeek]}, ${day} ${monthNames[month-1]} ${year}`
-      };
+      return `${day}/${month}`;
     } catch (error) {
       console.error('Error formatting date for trends:', error);
-      return { short: dateString || '', full: dateString || '' };
+      return dateString || '';
+    }
+  };
+
+  const getCurrentYear = () => {
+    if (!analytics?.dailyStats?.length) return '';
+    const latestDate = analytics.dailyStats[analytics.dailyStats.length - 1]?.date;
+    if (!latestDate) return '';
+    
+    try {
+      const indianDate = toIndianTime(latestDate);
+      return indianDate.getUTCFullYear();
+    } catch (error) {
+      return new Date().getFullYear();
     }
   };
 
@@ -186,7 +189,7 @@ const Analytics = () => {
                 <div className="w-full">
                   <div className="flex items-center justify-between mb-4">
                     <h4 className="text-md font-medium text-gray-900 dark:text-white">
-                      Daily Completion Status ({analytics.dailyStats.length} days)
+                      Daily Completion Status ({analytics.dailyStats.length} days) - {getCurrentYear()}
                     </h4>
                     <div className="text-xs text-gray-500 dark:text-gray-400 hidden sm:block">
                       Scroll horizontally → to see all days
@@ -204,17 +207,14 @@ const Analytics = () => {
                             Task
                           </div>
                           {[...analytics.dailyStats].reverse().map((day, index) => {
-                            const dateInfo = formatDateForTrends(day.date);
-                            const dayNum = dateInfo.short.split('/')[0];
-                            const monthNum = dateInfo.short.split('/')[1];
-                            const isFirstOfMonth = dayNum === '0';
+                            const dateStr = formatDateForTrends(day.date);
                             
                             return (
                               <div 
                                 key={day.date} 
                                 className="w-8 flex-shrink-0 text-xs text-gray-500 dark:text-gray-400 text-center font-medium"
                               >
-                                {isFirstOfMonth ? `${dayNum}/${monthNum}` : dayNum}
+                                {dateStr}
                               </div>
                             );
                           })}

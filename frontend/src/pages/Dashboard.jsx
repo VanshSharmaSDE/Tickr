@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { 
@@ -168,7 +168,7 @@ const TaskDetailModal = ({ task, isOpen, onClose }) => {
           <div className="flex justify-end p-6 border-t border-gray-200 dark:border-gray-700">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+              className="btn btn-secondary"
             >
               Close
             </button>
@@ -185,6 +185,8 @@ const Dashboard = () => {
   const [selectedTask, setSelectedTask] = useState(null);
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [taskToView, setTaskToView] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState(null);
   const [todayProgress, setTodayProgress] = useState([]);
 
   // Calculate today's stats
@@ -287,6 +289,25 @@ const Dashboard = () => {
   const handleCloseTaskModal = () => {
     setShowTaskModal(false);
     setTaskToView(null);
+  };
+
+  const handleDeleteClick = (task) => {
+    setTaskToDelete(task);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (taskToDelete) {
+      await deleteTask(taskToDelete._id);
+      setShowDeleteModal(false);
+      setTaskToDelete(null);
+      toast.success('Task deleted successfully');
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+    setTaskToDelete(null);
   };
 
   if (loading) {
@@ -434,7 +455,7 @@ const Dashboard = () => {
                   isCompleted={isTaskCompleted(task._id)}
                   onToggle={handleTaskToggle}
                   onEdit={() => setSelectedTask(task)}
-                  onDelete={() => deleteTask(task._id)}
+                  onDelete={() => handleDeleteClick(task)}
                   onView={handleViewTask}
                 />
               ))}
@@ -463,6 +484,14 @@ const Dashboard = () => {
           task={taskToView}
           isOpen={showTaskModal}
           onClose={handleCloseTaskModal}
+        />
+
+        {/* Delete Confirmation Modal */}
+        <DeleteConfirmationModal
+          isOpen={showDeleteModal}
+          onClose={handleCancelDelete}
+          onConfirm={handleConfirmDelete}
+          taskTitle={taskToDelete?.title || ''}
         />
       </div>
     </div>
@@ -570,6 +599,17 @@ const CreateTaskModal = ({ isOpen, onClose, onSubmit }) => {
     priority: 'medium'
   });
   const [loading, setLoading] = useState(false);
+  const titleInputRef = useRef(null);
+
+  // Auto-focus title input when modal opens
+  useEffect(() => {
+    if (isOpen && titleInputRef.current) {
+      // Small delay to ensure modal is fully rendered
+      setTimeout(() => {
+        titleInputRef.current.focus();
+      }, 100);
+    }
+  }, [isOpen]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -613,6 +653,7 @@ const CreateTaskModal = ({ isOpen, onClose, onSubmit }) => {
                   Task Title
                 </label>
                 <input
+                  ref={titleInputRef}
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
@@ -688,6 +729,18 @@ const EditTaskModal = ({ task, onClose, onSubmit }) => {
     priority: task.priority
   });
   const [loading, setLoading] = useState(false);
+  const titleInputRef = useRef(null);
+
+  // Auto-focus title input when modal opens
+  useEffect(() => {
+    if (task && titleInputRef.current) {
+      // Small delay to ensure modal is fully rendered
+      setTimeout(() => {
+        titleInputRef.current.focus();
+        titleInputRef.current.select(); // Select all text for easy editing
+      }, 100);
+    }
+  }, [task]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -724,6 +777,7 @@ const EditTaskModal = ({ task, onClose, onSubmit }) => {
                   Task Title
                 </label>
                 <input
+                  ref={titleInputRef}
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
@@ -786,6 +840,57 @@ const EditTaskModal = ({ task, onClose, onSubmit }) => {
           </div>
         </div>
       </div>
+  );
+};
+
+// Delete Confirmation Modal Component
+const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, taskTitle }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full">
+        <div className="p-6">
+          <div className="flex items-center mb-4">
+            <div className="flex-shrink-0 w-10 h-10 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center">
+              <FiTrash2 className="w-5 h-5 text-red-600 dark:text-red-400" />
+            </div>
+            <div className="ml-4">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                Delete Task
+              </h3>
+            </div>
+          </div>
+          
+          <div className="mb-6">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+              Are you sure you want to delete this task?
+            </p>
+            <p className="text-sm font-medium text-gray-900 dark:text-white">
+              "{taskTitle}"
+            </p>
+            <p className="text-xs text-red-600 dark:text-red-400 mt-2">
+              This action cannot be undone.
+            </p>
+          </div>
+
+          <div className="flex justify-end space-x-3">
+            <button
+              onClick={onClose}
+              className="btn btn-secondary"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onConfirm}
+              className="btn bg-red-600 hover:bg-red-700 text-white"
+            >
+              Delete Task
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
