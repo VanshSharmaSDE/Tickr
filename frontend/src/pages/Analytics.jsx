@@ -2,9 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   FiBarChart, 
-  FiTrendingUp, 
   FiCalendar, 
-  FiTarget,
   FiCheckCircle,
 } from 'react-icons/fi';
 import { analyticsService } from '../services/analyticsService';
@@ -14,7 +12,6 @@ const Analytics = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedDays, setSelectedDays] = useState(28); // Default to 28 days
-  const [viewType, setViewType] = useState('overview'); // overview, trends, breakdown
 
   // Helper function to convert any date to Indian timezone
   const toIndianTime = (dateInput) => {
@@ -61,44 +58,12 @@ const Analytics = () => {
   };
 
   const getDayOptions = () => [
-    { value: 7, label: 'Last 7 days' },
-    { value: 14, label: 'Last 14 days' },
     { value: 28, label: 'Last 28 days' },
     { value: 56, label: 'Last 56 days' },
     { value: 90, label: 'Last 3 months' },
     { value: 180, label: 'Last 6 months' },
     { value: 365, label: 'Last year' }
   ];
-
-  const getCompletionTrend = () => {
-    if (!analytics?.dailyStats?.length) return 'stable';
-    
-    const recent = analytics.dailyStats.slice(0, Math.min(7, analytics.dailyStats.length));
-    const older = analytics.dailyStats.slice(7, Math.min(14, analytics.dailyStats.length));
-    
-    if (recent.length === 0 || older.length === 0) return 'stable';
-    
-    const recentAvg = recent.reduce((sum, day) => sum + day.completionRate, 0) / recent.length;
-    const olderAvg = older.reduce((sum, day) => sum + day.completionRate, 0) / older.length;
-    
-    if (recentAvg > olderAvg + 10) return 'improving';
-    if (recentAvg < olderAvg - 10) return 'declining';
-    return 'stable';
-  };
-
-  const getBestDay = () => {
-    if (!analytics?.dailyStats?.length) return null;
-    
-    // Find the day with the highest completion rate
-    const bestDay = analytics.dailyStats.reduce((best, day) => 
-      day.completionRate > (best?.completionRate || 0) ? day : best
-    );
-    
-    // If all days have 0% completion rate, return today's date
-    bestDay.completionRate = analytics.completionRate;
-    
-    return bestDay;
-  };
 
   const formatDate = (dateString) => {
     try {
@@ -169,9 +134,6 @@ const Analytics = () => {
     );
   }
 
-  const trend = getCompletionTrend();
-  const bestDay = getBestDay();
-
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -205,165 +167,10 @@ const Analytics = () => {
               </select>
             </div>
           </div>
-
-          <div className="flex items-center space-x-2">
-            {['overview', 'trends', 'breakdown'].map(type => (
-              <button
-                key={type}
-                onClick={() => setViewType(type)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  viewType === type
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                }`}
-              >
-                {type.charAt(0).toUpperCase() + type.slice(1)}
-              </button>
-            ))}
-          </div>
         </div>
 
-        {/* Overview Stats */}
-        {viewType === 'overview' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="stat-card"
-            >
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <FiTarget className="h-8 w-8 text-primary-600" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                    Total Tasks
-                  </p>
-                  <p className="text-2xl font-semibold text-gray-900 dark:text-white">
-                    {analytics?.totalTasks || 0}
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="stat-card"
-            >
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <FiCheckCircle className="h-8 w-8 text-success-600" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                    Completed
-                  </p>
-                  <p className="text-2xl font-semibold text-gray-900 dark:text-white">
-                    {analytics?.completedTasks || 0}
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="stat-card"
-            >
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <FiBarChart className="h-8 w-8 text-warning-600" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                    Completion Rate
-                  </p>
-                  <p className="text-2xl font-semibold text-gray-900 dark:text-white">
-                    {analytics?.completionRate?.toFixed(1) || 0}%
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="stat-card"
-            >
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <FiTrendingUp className={`h-8 w-8 ${
-                    trend === 'improving' ? 'text-success-600' :
-                    trend === 'declining' ? 'text-red-600' : 'text-gray-600'
-                  }`} />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                    Trend
-                  </p>
-                  <p className={`text-2xl font-semibold ${
-                    trend === 'improving' ? 'text-success-600' :
-                    trend === 'declining' ? 'text-red-600' : 'text-gray-900 dark:text-white'
-                  }`}>
-                    {trend.charAt(0).toUpperCase() + trend.slice(1)}
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-
-        {/* Priority Breakdown */}
-        {(viewType === 'overview' || viewType === 'breakdown') && analytics?.priorityBreakdown && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="card mb-8"
-          >
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
-              Task Priority Breakdown
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {['high', 'medium', 'low'].map(priority => {
-                const data = analytics.priorityBreakdown[priority] || { total: 0, completed: 0 };
-                const rate = data.total > 0 ? (data.completed / data.total * 100) : 0;
-                
-                return (
-                  <div key={priority} className="text-center">
-                    <div className={`text-4xl font-bold mb-2 ${
-                      priority === 'high' ? 'text-red-600' :
-                      priority === 'medium' ? 'text-yellow-600' : 'text-green-600'
-                    }`}>
-                      {rate.toFixed(0)}%
-                    </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                      {priority.charAt(0).toUpperCase() + priority.slice(1)} Priority
-                    </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-500">
-                      {data.completed}/{data.total} completed
-                    </div>
-                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-2">
-                      <div
-                        className={`h-2 rounded-full ${
-                          priority === 'high' ? 'bg-red-600' :
-                          priority === 'medium' ? 'bg-yellow-600' : 'bg-green-600'
-                        }`}
-                        style={{ width: `${rate}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </motion.div>
-        )}
-
         {/* Daily Trends */}
-        {(viewType === 'trends' || viewType === 'overview') && analytics?.dailyStats?.length > 0 && (
+        {analytics?.dailyStats?.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -373,35 +180,7 @@ const Analytics = () => {
               Daily Completion Trends
             </h3>
             
-            {/* Best Day Highlight */}
-            {bestDay && (
-              <div className={`rounded-lg p-4 mb-6 ${
-                bestDay.completionRate > 0 
-                  ? 'bg-success-50 dark:bg-success-900/20' 
-                  : 'bg-blue-50 dark:bg-blue-900/20'
-              }`}>
-                <div className="flex items-center">
-                  <FiCalendar className={`h-5 w-5 mr-2 ${
-                    bestDay.completionRate > 0 
-                      ? 'text-success-600' 
-                      : 'text-blue-600'
-                  }`} />
-                  <span className={`text-sm font-medium ${
-                    bestDay.completionRate > 0 
-                      ? 'text-success-800 dark:text-success-200' 
-                      : 'text-blue-800 dark:text-blue-200'
-                  }`}>
-                    {bestDay.completionRate > 0 
-                      ? `Best Day: ${formatDate(bestDay.date)} - ${bestDay.completionRate.toFixed(1)}% completion rate`
-                      : `Today: ${formatDate(bestDay.date)} - Ready to start completing tasks!`
-                    }
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {viewType === 'trends' && analytics?.dailyStats?.length > 0 ? (
-              /* Task-wise Trends View - Full Width */
+            {/* Task-wise Trends View - Full Width */}
               <div className="w-full">
                 {/* Day-wise Completion Grid */}
                 <div className="w-full">
@@ -510,34 +289,6 @@ const Analytics = () => {
                   </div>
                 </div>
               </div>
-            ) : (
-              /* Simple Bar Chart for Overview */
-              <div className="space-y-3">
-                {[...analytics.dailyStats].reverse().map((day, index) => (
-                  <div key={day.date} className="flex items-center">
-                    <div className="w-16 text-xs text-gray-500 dark:text-gray-400">
-                      {formatDate(day.date)}
-                    </div>
-                    <div className="flex-1 mx-4">
-                      <div className="flex items-center">
-                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4">
-                          <div
-                            className="bg-gradient-to-r from-primary-600 to-primary-500 h-4 rounded-full transition-all duration-300"
-                            style={{ width: `${day.completionRate}%` }}
-                          ></div>
-                        </div>
-                        <span className="ml-3 text-sm font-medium text-gray-900 dark:text-white min-w-[3rem]">
-                          {day.completionRate.toFixed(0)}%
-                        </span>
-                      </div>
-                    </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                      {day.completed}/{day.total}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
           </motion.div>
         )}
 

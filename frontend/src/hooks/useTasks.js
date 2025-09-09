@@ -64,12 +64,11 @@ export const useTasks = () => {
   const toggleTask = async (taskId) => {
     try {
       await taskService.toggleTaskCompletion(taskId);
-      // Refresh tasks to get updated progress
-      fetchTasks();
+      // Don't refetch all tasks or set loading state - let optimistic updates handle it
       return { success: true };
     } catch (err) {
       const message = err.response?.data?.message || 'Failed to update task';
-      toast.error(message);
+      // Don't show toast here - let the Dashboard handle it
       return { success: false, message };
     }
   };

@@ -11,9 +11,10 @@ import {
   FiSun,
   FiMoon,
   FiMenu,
-  FiX
+  FiX,
+  FiSettings
 } from 'react-icons/fi';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -21,6 +22,22 @@ const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const settingsRef = useRef(null);
+
+  // Close settings dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (settingsRef.current && !settingsRef.current.contains(event.target)) {
+        setIsSettingsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -75,30 +92,51 @@ const Navbar = () => {
 
           {/* Right side */}
           <div className="flex items-center space-x-4">
-            {/* Theme toggle */}
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-lg text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            >
-              {isDark ? <FiSun className="w-5 h-5" /> : <FiMoon className="w-5 h-5" />}
-            </button>
+            {/* User name */}
+            <div className="hidden md:flex items-center space-x-2 px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-700">
+              <FiUser className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+              <span className="text-sm font-medium text-gray-900 dark:text-white">
+                {user?.name}
+              </span>
+            </div>
 
-            {/* User menu */}
-            <div className="hidden md:flex items-center space-x-3">
-              <div className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-700">
-                <FiUser className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-                <span className="text-sm font-medium text-gray-900 dark:text-white">
-                  {user?.name}
-                </span>
-              </div>
-              
+            {/* Settings dropdown */}
+            <div className="relative" ref={settingsRef}>
               <button
-                onClick={handleLogout}
-                className="flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/20 transition-colors"
+                onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+                className="p-2 rounded-lg text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               >
-                <FiLogOut className="w-4 h-4" />
-                <span>Logout</span>
+                <FiSettings className="w-5 h-5" />
               </button>
+
+              {/* Settings dropdown menu */}
+              {isSettingsOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50">
+                  {/* Dark/Light mode toggle */}
+                  <button
+                    onClick={() => {
+                      toggleTheme();
+                      setIsSettingsOpen(false);
+                    }}
+                    className="flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 w-full text-left transition-colors"
+                  >
+                    {isDark ? <FiSun className="w-4 h-4" /> : <FiMoon className="w-4 h-4" />}
+                    <span>{isDark ? 'Light Mode' : 'Dark Mode'}</span>
+                  </button>
+
+                  {/* Logout */}
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      setIsSettingsOpen(false);
+                    }}
+                    className="flex items-center space-x-3 px-4 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/20 w-full text-left transition-colors"
+                  >
+                    <FiLogOut className="w-4 h-4" />
+                    <span>Logout</span>
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Mobile menu button */}
@@ -135,14 +173,31 @@ const Navbar = () => {
               })}
               
               <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-                <div className="flex items-center space-x-2 px-3 py-2 text-gray-900 dark:text-white">
+                {/* User name in mobile */}
+                <div className="flex items-center space-x-2 px-3 py-2 text-gray-900 dark:text-white mb-2">
                   <FiUser className="w-4 h-4" />
                   <span className="text-sm font-medium">{user?.name}</span>
                 </div>
                 
+                {/* Theme toggle in mobile */}
                 <button
-                  onClick={handleLogout}
-                  className="flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/20 transition-colors w-full text-left"
+                  onClick={() => {
+                    toggleTheme();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 w-full text-left transition-colors"
+                >
+                  {isDark ? <FiSun className="w-4 h-4" /> : <FiMoon className="w-4 h-4" />}
+                  <span>{isDark ? 'Light Mode' : 'Dark Mode'}</span>
+                </button>
+                
+                {/* Logout in mobile */}
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/20 transition-colors w-full text-left"
                 >
                   <FiLogOut className="w-4 h-4" />
                   <span>Logout</span>

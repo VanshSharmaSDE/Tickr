@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
 import { 
   FiPlus, 
   FiCheckCircle, 
@@ -218,29 +219,51 @@ const Dashboard = () => {
 
   const handleTaskToggle = async (taskId) => {
     try {
-      // Optimistic update - instantly update UI
+      // Get the task info for better user feedback
+      const task = tasks.find(t => t._id === taskId);
       const currentCompleted = isTaskCompleted(taskId);
       
+      // Optimistic update - instantly update UI without loader
       if (currentCompleted) {
         // Remove from completed tasks instantly
         setTodayProgress(prev => prev.filter(progress => progress.task._id !== taskId));
+        // Show success toast immediately
+        toast.success(`✓ ${task?.title ? truncateText(task.title, 20) : 'Task'} unmarked`, {
+          duration: 2000,
+        });
       } else {
         // Add to completed tasks instantly
-        const task = tasks.find(t => t._id === taskId);
         if (task) {
           setTodayProgress(prev => [...prev, { 
             task: task, 
             completed: true, 
+            date: new Date(),
             completedAt: new Date().toISOString() 
           }]);
+          // Show success toast immediately
+          toast.success(`✓ ${truncateText(task.title, 20)} completed!`, {
+            duration: 2000,
+          });
         }
       }
       
-      // Then update the backend in the background
-      await toggleTask(taskId);
+      // Update backend silently in the background
+      const result = await toggleTask(taskId);
+      
+      // Only handle errors if the API call failed
+      if (!result.success) {
+        throw new Error(result.message);
+      }
+      
     } catch (error) {
       console.error('Error toggling task:', error);
-      // If API call fails, revert the optimistic update
+      
+      // Show error toast
+      toast.error('Failed to update task. Please try again.', {
+        duration: 3000,
+      });
+      
+      // Revert the optimistic update on error
       try {
         const response = await taskService.getTodayProgress();
         setTodayProgress(response.data);
