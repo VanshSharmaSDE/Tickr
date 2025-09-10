@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { ThemeProvider } from './context/ThemeContext';
+import { SettingsProvider } from './context/SettingsContext';
 
 // Pages
 import Login from './pages/Login';
@@ -74,7 +74,7 @@ function AppContent() {
       <Toaster
         position="top-right"
         toastOptions={{
-          duration: 4000,
+          duration: 2000,
           style: {
             background: 'var(--toast-bg)',
             color: 'var(--toast-color)',
@@ -100,13 +100,13 @@ function AppContent() {
 
 function App() {
   return (
-    <ThemeProvider>
+    <SettingsProvider>
       <AuthProvider>
         <Router>
           <AppContent />
         </Router>
       </AuthProvider>
-    </ThemeProvider>
+    </SettingsProvider>
   );
 }
 

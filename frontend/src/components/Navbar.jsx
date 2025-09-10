@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
+import { useSettings } from '../context/SettingsContext';
 import { 
   FiHome, 
   FiClipboard, 
@@ -12,13 +12,15 @@ import {
   FiMoon,
   FiMenu,
   FiX,
-  FiSettings
+  FiSettings,
+  FiGrid,
+  FiList
 } from 'react-icons/fi';
 import { useState, useEffect, useRef } from 'react';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
-  const { isDark, toggleTheme } = useTheme();
+  const { isDark, toggleTheme, isCardView, toggleViewMode, syncing } = useSettings();
   const location = useLocation();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -104,14 +106,36 @@ const Navbar = () => {
             <div className="relative" ref={settingsRef}>
               <button
                 onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-                className="p-2 rounded-lg text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                className={`p-2 rounded-lg text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors relative ${
+                  syncing ? 'animate-pulse' : ''
+                }`}
               >
                 <FiSettings className="w-5 h-5" />
+                {syncing && (
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full animate-ping"></div>
+                )}
               </button>
 
               {/* Settings dropdown menu */}
               {isSettingsOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50">
+                  {/* View mode toggle (only show on dashboard) */}
+                  {location.pathname === '/dashboard' && (
+                    <>
+                      <button
+                        onClick={() => {
+                          toggleViewMode();
+                          setIsSettingsOpen(false);
+                        }}
+                        className="flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 w-full text-left transition-colors"
+                      >
+                        {isCardView ? <FiList className="w-4 h-4" /> : <FiGrid className="w-4 h-4" />}
+                        <span>{isCardView ? 'List View' : 'Card View'}</span>
+                      </button>
+                      <div className="border-t border-gray-200 dark:border-gray-700 my-2"></div>
+                    </>
+                  )}
+
                   {/* Dark/Light mode toggle */}
                   <button
                     onClick={() => {

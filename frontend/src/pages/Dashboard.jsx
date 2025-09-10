@@ -11,10 +11,13 @@ import {
   FiX,
   FiTarget,
   FiCheck,
-  FiEye
+  FiEye,
+  FiGrid,
+  FiList
 } from 'react-icons/fi';
 import { useTasks } from '../hooks/useTasks';
 import { useAuth } from '../context/AuthContext';
+import { useSettings } from '../context/SettingsContext';
 import { formatDate } from '../utils/dateUtils';
 import { taskService } from '../services/taskService';
 
@@ -32,7 +35,7 @@ const TEXT_LIMITS = {
 };
 
 // Task Detail Modal Component
-const TaskDetailModal = ({ task, isOpen, onClose }) => {
+const TaskDetailModal = ({ task, isOpen, onClose, isCompleted }) => {
   if (!isOpen || !task) return null;
 
   const formatPriority = (priority) => {
@@ -112,11 +115,11 @@ const TaskDetailModal = ({ task, isOpen, onClose }) => {
                   Status
                 </label>
                 <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                  task.completed
+                  isCompleted
                     ? 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900'
                     : 'text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900'
                 }`}>
-                  {task.completed ? (
+                  {isCompleted ? (
                     <>
                       <FiCheckCircle className="w-4 h-4 mr-1" />
                       Completed
@@ -180,6 +183,7 @@ const TaskDetailModal = ({ task, isOpen, onClose }) => {
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const { isCardView, isListView, loading: settingsLoading } = useSettings();
   const { tasks, loading, createTask, deleteTask, updateTask, toggleTask } = useTasks();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
@@ -310,10 +314,15 @@ const Dashboard = () => {
     setTaskToDelete(null);
   };
 
-  if (loading) {
+  if (loading || settingsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">
+            {settingsLoading ? 'Loading your preferences...' : 'Loading dashboard...'}
+          </p>
+        </div>
       </div>
     );
   }
@@ -425,9 +434,24 @@ const Dashboard = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.5 }}
         >
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-            Your Tasks
-          </h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Your Tasks
+            </h2>
+            <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
+              {isCardView ? (
+                <>
+                  <FiGrid className="w-4 h-4" />
+                  <span>Card View</span>
+                </>
+              ) : (
+                <>
+                  <FiList className="w-4 h-4" />
+                  <span>List View</span>
+                </>
+              )}
+            </div>
+          </div>
           
           {tasks.length === 0 ? (
             <div className="card text-center py-12">
@@ -447,19 +471,46 @@ const Dashboard = () => {
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {tasks.map((task) => (
-                <TaskCard
-                  key={task._id}
-                  task={task}
-                  isCompleted={isTaskCompleted(task._id)}
-                  onToggle={handleTaskToggle}
-                  onEdit={() => setSelectedTask(task)}
-                  onDelete={() => handleDeleteClick(task)}
-                  onView={handleViewTask}
-                />
+            <motion.div 
+              key={isCardView ? 'card-view' : 'list-view'}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className={isCardView 
+                ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" 
+                : "space-y-3"
+              }
+            >
+              {tasks.map((task, index) => (
+                isCardView ? (
+                  <motion.div
+                    key={task._id}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: index * 0.05, duration: 0.3 }}
+                  >
+                    <TaskCard
+                      task={task}
+                      isCompleted={isTaskCompleted(task._id)}
+                      onToggle={handleTaskToggle}
+                      onEdit={() => setSelectedTask(task)}
+                      onDelete={() => handleDeleteClick(task)}
+                      onView={handleViewTask}
+                    />
+                  </motion.div>
+                ) : (
+                  <TaskListItem
+                    key={task._id}
+                    task={task}
+                    isCompleted={isTaskCompleted(task._id)}
+                    onToggle={handleTaskToggle}
+                    onEdit={() => setSelectedTask(task)}
+                    onDelete={() => handleDeleteClick(task)}
+                    onView={handleViewTask}
+                  />
+                )
               ))}
-            </div>
+            </motion.div>
           )}
         </motion.div>
 
@@ -481,9 +532,10 @@ const Dashboard = () => {
 
         {/* Task Detail Modal */}
         <TaskDetailModal
-          task={taskToView}
+          task={taskToView ? tasks.find(t => t._id === taskToView._id) || taskToView : null}
           isOpen={showTaskModal}
           onClose={handleCloseTaskModal}
+          isCompleted={taskToView ? isTaskCompleted(taskToView._id) : false}
         />
 
         {/* Delete Confirmation Modal */}
@@ -588,6 +640,91 @@ const TaskCard = ({ task, isCompleted, onToggle, onEdit, onDelete, onView }) => 
         </span>
       </div>
     </div>
+  );
+};
+
+// Task List Item Component (for list view)
+const TaskListItem = ({ task, isCompleted, onToggle, onEdit, onDelete, onView }) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 20 }}
+      className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition-shadow duration-200"
+    >
+      <div className="flex items-center justify-between">
+        {/* Left side - Task info and completion button */}
+        <div className="flex items-center space-x-4 flex-1 min-w-0">
+          {/* Completion button */}
+          <button
+            onClick={() => onToggle(task._id)}
+            className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+              isCompleted
+                ? 'bg-success-600 border-success-600 text-white'
+                : 'border-gray-300 dark:border-gray-600 hover:border-primary-500'
+            }`}
+          >
+            {isCompleted && <FiCheck className="w-3 h-3" />}
+          </button>
+
+          {/* Task content */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center space-x-3">
+              <h3 className={`text-base font-medium truncate ${
+                isCompleted 
+                  ? 'line-through text-gray-500 dark:text-gray-400' 
+                  : 'text-gray-900 dark:text-white'
+              }`}>
+                {task.title}
+              </h3>
+              
+              {/* Priority badge */}
+              <span className={`text-xs px-2 py-1 rounded-full border flex-shrink-0 ${
+                task.priority === 'high'
+                  ? 'priority-high'
+                  : task.priority === 'medium'
+                  ? 'priority-medium'
+                  : 'priority-low'
+              }`}>
+                {task.priority}
+              </span>
+            </div>
+            
+            {/* Description */}
+            {task.description && (
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 truncate">
+                {task.description}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Right side - Action buttons */}
+        <div className="flex items-center space-x-2 flex-shrink-0 ml-4">
+          <button
+            onClick={() => onView(task)}
+            className="p-2 text-gray-400 hover:text-blue-600 transition-colors bg-gray-100 dark:bg-gray-700 rounded-lg"
+            title="View full details"
+          >
+            <FiEye className="w-4 h-4" />
+          </button>
+          <button
+            onClick={onEdit}
+            className="p-2 text-gray-400 hover:text-primary-600 transition-colors bg-gray-100 dark:bg-gray-700 rounded-lg"
+            title="Edit task"
+          >
+            <FiEdit3 className="w-4 h-4" />
+          </button>
+          <button
+            onClick={onDelete}
+            className="p-2 text-gray-400 hover:text-red-600 transition-colors bg-gray-100 dark:bg-gray-700 rounded-lg"
+            title="Delete task"
+          >
+            <FiTrash2 className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    </motion.div>
   );
 };
 

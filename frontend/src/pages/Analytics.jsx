@@ -203,19 +203,31 @@ const Analytics = () => {
                       <div className="w-full">
                         {/* Date Headers */}
                         <div className="flex gap-1 mb-2">
-                          <div className="w-36 flex-shrink-0 text-xs text-gray-500 dark:text-gray-400 font-medium">
+                          <motion.div 
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="w-36 flex-shrink-0 text-xs text-gray-500 dark:text-gray-400 font-medium"
+                          >
                             Task
-                          </div>
+                          </motion.div>
                           {[...analytics.dailyStats].reverse().map((day, index) => {
                             const dateStr = formatDateForTrends(day.date);
                             
                             return (
-                              <div 
-                                key={day.date} 
+                              <motion.div 
+                                key={day.date}
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ 
+                                  duration: 0.3,
+                                  delay: index * 0.02,
+                                  ease: "easeOut"
+                                }}
                                 className="w-8 flex-shrink-0 text-xs text-gray-500 dark:text-gray-400 text-center font-medium"
                               >
                                 {dateStr}
-                              </div>
+                              </motion.div>
                             );
                           })}
                         </div>
@@ -223,37 +235,81 @@ const Analytics = () => {
                         {/* Task Completion Grid */}
                         <div className="space-y-2">
                           {analytics.tasks && analytics.tasks.length > 0 ? (
-                            analytics.tasks.map((task, index) => (
-                              <div key={task._id} className="flex gap-1 items-center">
-                                <div className={`w-36 flex-shrink-0 text-sm font-medium truncate px-3 py-2 rounded-lg border-l-4 ${
-                                  task.priority === 'high' 
-                                    ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 border-l-red-500'
-                                    : task.priority === 'medium'
-                                    ? 'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300 border-l-yellow-500'
-                                    : 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 border-l-green-500'
-                                }`}>
+                            analytics.tasks.map((task, taskIndex) => (
+                              <motion.div 
+                                key={task._id} 
+                                initial={{ opacity: 0, x: -30 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ 
+                                  duration: 0.4,
+                                  delay: taskIndex * 0.1,
+                                  ease: "easeOut"
+                                }}
+                                className="flex gap-1 items-center"
+                              >
+                                <motion.div 
+                                  initial={{ opacity: 0, scale: 0.8 }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  transition={{ 
+                                    duration: 0.3,
+                                    delay: taskIndex * 0.1 + 0.2,
+                                    ease: "easeOut"
+                                  }}
+                                  className={`w-36 flex-shrink-0 text-sm font-medium truncate px-3 py-2 rounded-lg border-l-4 ${
+                                    task.priority === 'high' 
+                                      ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 border-l-red-500'
+                                      : task.priority === 'medium'
+                                      ? 'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300 border-l-yellow-500'
+                                      : 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 border-l-green-500'
+                                  }`}
+                                >
                                   {task.title}
-                                </div>
-                                {[...analytics.dailyStats].reverse().map((day) => {
+                                </motion.div>
+                                {[...analytics.dailyStats].reverse().map((day, dayIndex) => {
                                   const taskProgress = analytics.taskProgressByDate?.[task._id]?.[day.date];
                                   const isCompleted = taskProgress?.completed;
                                   
                                   return (
-                                    <div
+                                    <motion.div
                                       key={`${task._id}-${day.date}`}
-                                      className={`w-8 h-8 flex-shrink-0 rounded border-2 flex items-center justify-center transition-colors hover:scale-110 ${
+                                      initial={{ opacity: 0, scale: 0.3, rotateZ: 180 }}
+                                      animate={{ opacity: 1, scale: 1, rotateZ: 0 }}
+                                      transition={{ 
+                                        duration: 0.4,
+                                        delay: taskIndex * 0.1 + dayIndex * 0.015 + 0.3,
+                                        ease: "easeOut",
+                                        type: "spring",
+                                        stiffness: 200,
+                                        damping: 15
+                                      }}
+                                      whileHover={{ 
+                                        scale: 1.15,
+                                        rotateZ: 5,
+                                        transition: { duration: 0.2 }
+                                      }}
+                                      className={`w-8 h-8 flex-shrink-0 rounded border-2 flex items-center justify-center transition-colors cursor-pointer ${
                                         isCompleted
-                                          ? 'bg-success-500 border-success-600 hover:bg-success-600'
+                                          ? 'bg-success-500 border-success-600 hover:bg-success-600 shadow-sm'
                                           : 'bg-gray-200 dark:bg-gray-600 border-gray-300 dark:border-gray-500 hover:bg-gray-300 dark:hover:bg-gray-500'
                                       }`}
                                     >
                                       {isCompleted && (
-                                        <FiCheckCircle className="w-4 h-4 text-white" />
+                                        <motion.div
+                                          initial={{ opacity: 0, scale: 0 }}
+                                          animate={{ opacity: 1, scale: 1 }}
+                                          transition={{ 
+                                            duration: 0.3,
+                                            delay: taskIndex * 0.1 + dayIndex * 0.015 + 0.5,
+                                            ease: "easeOut"
+                                          }}
+                                        >
+                                          <FiCheckCircle className="w-4 h-4 text-white" />
+                                        </motion.div>
                                       )}
-                                    </div>
+                                    </motion.div>
                                   );
                                 })}
-                              </div>
+                              </motion.div>
                             ))
                           ) : (
                             <div className="flex gap-1 items-center">
