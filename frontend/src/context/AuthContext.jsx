@@ -99,11 +99,25 @@ export const AuthProvider = ({ children }) => {
       toast.success(`Welcome back, ${user.name}!`);
       return { success: true };
     } catch (error) {
-      const message = error.response?.data?.message || 'Login failed';
+      const errorData = error.response?.data;
+      const message = errorData?.message || 'Login failed';
+      
       dispatch({
         type: 'LOGIN_FAILURE',
         payload: message,
       });
+      
+      // Check if user needs email verification
+      if (errorData?.requiresVerification) {
+        toast.error(message);
+        return { 
+          success: false, 
+          message, 
+          requiresVerification: true,
+          email: errorData.email 
+        };
+      }
+      
       toast.error(message);
       return { success: false, message };
     }
@@ -136,6 +150,60 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // New OTP-based registration methods
+  const registerSendOTP = async (name, email, password) => {
+    try {
+      // Don't set global loading - let component handle its own loading state
+      const response = await authService.registerSendOTP(name, email, password);
+      
+      toast.success('Verification code sent to your email');
+      return { success: true, email: response.data.email };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to send verification code';
+      toast.error(message);
+      return { success: false, message };
+    }
+  };
+
+  const registerVerifyOTP = async (email, otp) => {
+    try {
+      dispatch({ type: 'LOGIN_START' });
+      
+      const response = await authService.registerVerifyOTP(email, otp);
+      const { token, user } = response.data;
+      
+      localStorage.setItem('token', token);
+      
+      dispatch({
+        type: 'LOGIN_SUCCESS',
+        payload: { user, token },
+      });
+      
+      toast.success(`Welcome to Tickr, ${user.name}!`);
+      return { success: true };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Invalid verification code';
+      dispatch({
+        type: 'LOGIN_FAILURE',
+        payload: message,
+      });
+      toast.error(message);
+      return { success: false, message };
+    }
+  };
+
+  const resendVerificationOTP = async (email) => {
+    try {
+      await authService.resendVerificationOTP(email);
+      toast.success('Verification code resent');
+      return { success: true };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to resend code';
+      toast.error(message);
+      return { success: false, message };
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem('token');
     dispatch({ type: 'LOGOUT' });
@@ -149,6 +217,46 @@ export const AuthProvider = ({ children }) => {
       return { success: true };
     } catch (error) {
       const message = error.response?.data?.message || 'Failed to send reset email';
+      toast.error(message);
+      return { success: false, message };
+    }
+  };
+
+  // New OTP-based forgot password methods
+  const forgotPasswordSendOTP = async (email) => {
+    try {
+      const response = await authService.forgotPasswordSendOTP(email);
+      
+      toast.success('Password reset code sent to your email');
+      return { success: true, email: response.data.email };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to send reset code';
+      toast.error(message);
+      return { success: false, message };
+    }
+  };
+
+  const forgotPasswordVerifyOTP = async (email, otp) => {
+    try {
+      const response = await authService.forgotPasswordVerifyOTP(email, otp);
+      const { resetToken } = response.data;
+      
+      toast.success('Code verified successfully');
+      return { success: true, resetToken };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Invalid verification code';
+      toast.error(message);
+      return { success: false, message };
+    }
+  };
+
+  const resendPasswordResetOTP = async (email) => {
+    try {
+      await authService.resendPasswordResetOTP(email);
+      toast.success('Reset code resent');
+      return { success: true };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to resend code';
       toast.error(message);
       return { success: false, message };
     }
@@ -176,6 +284,13 @@ export const AuthProvider = ({ children }) => {
     logout,
     forgotPassword,
     resetPassword,
+    // OTP methods
+    registerSendOTP,
+    registerVerifyOTP,
+    resendVerificationOTP,
+    forgotPasswordSendOTP,
+    forgotPasswordVerifyOTP,
+    resendPasswordResetOTP,
   };
 
   return (

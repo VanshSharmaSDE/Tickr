@@ -1,16 +1,28 @@
 const express = require('express');
 const auth = require('../middleware/auth');
 const {
-  register,
+  registerSendOTP,
+  registerVerifyOTP,
+  resendVerificationOTP,
   login,
   getProfile,
-  forgotPassword,
-  resetPassword
+  forgotPasswordSendOTP,
+  forgotPasswordVerifyOTP,
+  resendPasswordResetOTP,
+  resetPassword,
+  // Legacy endpoints
+  register,
+  forgotPassword
 } = require('../controllers/authController');
 
 const router = express.Router();
 
-// Register
+// Registration with OTP
+router.post('/register/send-otp', registerSendOTP);
+router.post('/register/verify-otp', registerVerifyOTP);
+router.post('/register/resend-otp', resendVerificationOTP);
+
+// Legacy register endpoint (for backward compatibility)
 router.post('/register', register);
 
 // Login
@@ -19,10 +31,15 @@ router.post('/login', login);
 // Get user profile
 router.get('/profile', auth, getProfile);
 
-// Forgot password
+// Password reset with OTP
+router.post('/forgot-password/send-otp', forgotPasswordSendOTP);
+router.post('/forgot-password/verify-otp', forgotPasswordVerifyOTP);
+router.post('/forgot-password/resend-otp', resendPasswordResetOTP);
+
+// Legacy forgot password endpoint (for backward compatibility)
 router.post('/forgot-password', forgotPassword);
 
-// Reset password
+// Reset password (final step after OTP verification)
 router.post('/reset-password', resetPassword);
 
 module.exports = router;

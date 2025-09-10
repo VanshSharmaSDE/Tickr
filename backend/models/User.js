@@ -18,8 +18,27 @@ const userSchema = new mongoose.Schema({
         required: [true, 'Please provide a password'],
         minlength: 6
     },
+    isVerified: {
+        type: Boolean,
+        default: false
+    },
+    // OTP for email verification during registration
+    emailVerificationOTP: {
+        type: String
+    },
+    emailVerificationOTPExpiry: {
+        type: Date
+    },
+    // OTP for password reset
+    passwordResetOTP: {
+        type: String
+    },
+    passwordResetOTPExpiry: {
+        type: Date
+    },
+    // Legacy fields for password reset (keeping for backward compatibility)
     resetPasswordToken: String,
-    resetPasswordExpire: Date
+    resetPasswordExpiry: Date
 }, {
     timestamps: true
 });

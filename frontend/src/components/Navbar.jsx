@@ -61,13 +61,20 @@ const Navbar = () => {
         <div className="flex justify-between h-16">
           {/* Logo and brand */}
           <div className="flex items-center">
-            <Link to="/dashboard" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">T</span>
+            <Link to="/dashboard" className="flex items-center space-x-3">
+              <img 
+                src="/logo.png" 
+                alt="Tickr Logo" 
+                className="w-8 h-8 rounded-lg"
+              />
+              <div className="flex items-center space-x-2">
+                <span className="text-xl font-bold text-gray-900 dark:text-white">
+                  Tickr
+                </span>
+                <span className="text-xs text-gray-500 dark:text-gray-400 font-medium px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-full">
+                  v1.0.0
+                </span>
               </div>
-              <span className="text-xl font-bold text-gray-900 dark:text-white">
-                Tickr
-              </span>
             </Link>
           </div>
 

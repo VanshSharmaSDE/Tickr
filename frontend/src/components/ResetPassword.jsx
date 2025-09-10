@@ -1,27 +1,18 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FiMail, FiLock, FiEye, FiEyeOff, FiUser } from 'react-icons/fi';
+import { FiLock, FiEye, FiEyeOff, FiCheck } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
-import { validateEmail, validateRequired, validatePassword } from '../utils/validation';
-import OTPVerification from '../components/OTPVerification';
+import { validatePassword } from '../utils/validation';
 
-const Register = () => {
-  const [step, setStep] = useState('form'); // 'form' or 'otp'
+const ResetPassword = ({ resetToken, onSuccess, onBack }) => {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
     password: '',
     confirmPassword: '',
   });
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [localLoading, setLocalLoading] = useState(false); // Local loading state
-  const [resendLoading, setResendLoading] = useState(false); // Resend loading state
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false); // Success message state
-  const { registerSendOTP, registerVerifyOTP, resendVerificationOTP } = useAuth(); // Removed global loading
-  const navigate = useNavigate();
+  const { resetPassword, loading } = useAuth();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -42,25 +33,13 @@ const Register = () => {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!validateRequired(formData.name)) {
-      newErrors.name = 'Name is required';
-    } else if (formData.name.length < 2) {
-      newErrors.name = 'Name must be at least 2 characters long';
-    }
-
-    if (!validateRequired(formData.email)) {
-      newErrors.email = 'Email is required';
-    } else if (!validateEmail(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
-    }
-
-    if (!validateRequired(formData.password)) {
+    if (!formData.password) {
       newErrors.password = 'Password is required';
     } else if (!validatePassword(formData.password)) {
       newErrors.password = 'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number';
     }
 
-    if (!validateRequired(formData.confirmPassword)) {
+    if (!formData.confirmPassword) {
       newErrors.confirmPassword = 'Please confirm your password';
     } else if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match';
@@ -75,65 +54,23 @@ const Register = () => {
     
     if (!validateForm()) return;
 
-    try {
-      console.log('Starting registration process...');
-      setLocalLoading(true);
-      
-      const result = await registerSendOTP(formData.name, formData.email, formData.password);
-      console.log('Registration result:', result);
-      
-      if (result.success) {
-        console.log('OTP sent successfully, switching to OTP step...');
-        setLocalLoading(false);
-        setStep('otp');
-      } else {
-        setLocalLoading(false);
-      }
-    } catch (error) {
-      console.error('Error sending OTP:', error);
-      setLocalLoading(false);
-    }
-  };
-
-  const handleOTPVerify = async (otp) => {
-    const result = await registerVerifyOTP(formData.email, otp);
+    const result = await resetPassword(resetToken, formData.password);
     if (result.success) {
-      navigate('/dashboard');
+      onSuccess();
     }
   };
 
-  const handleResendOTP = async () => {
-    try {
-      setResendLoading(true);
-      await resendVerificationOTP(formData.email);
-    } catch (error) {
-      console.error('Error resending OTP:', error);
-    } finally {
-      setResendLoading(false);
-    }
+  const getPasswordStrength = (password) => {
+    let strength = 0;
+    if (password.length >= 8) strength++;
+    if (/[a-z]/.test(password)) strength++;
+    if (/[A-Z]/.test(password)) strength++;
+    if (/[0-9]/.test(password)) strength++;
+    if (/[^A-Za-z0-9]/.test(password)) strength++;
+    return strength;
   };
 
-  const handleBackToForm = () => {
-    setStep('form');
-    setLocalLoading(false);
-    setShowSuccessMessage(false);
-    setResendLoading(false);
-  };
-
-  // Show OTP verification if we're in that step
-  if (step === 'otp') {
-    return (
-      <OTPVerification
-        email={formData.email}
-        type="registration"
-        onVerify={handleOTPVerify}
-        onResend={handleResendOTP}
-        onBack={handleBackToForm}
-        loading={false} // Use OTP component's own loading for verify
-        resendLoading={resendLoading}
-      />
-    );
-  }
+  const passwordStrength = getPasswordStrength(formData.password);
 
   return (
     <div className="min-h-screen flex bg-gray-50 dark:bg-gray-900">
@@ -146,15 +83,23 @@ const Register = () => {
           className="max-w-md w-full space-y-8"
         >
           <div className="text-center">
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.1, duration: 0.5 }}
+              className="mx-auto w-16 h-16 bg-green-600 rounded-2xl flex items-center justify-center mb-6"
+            >
+              <FiCheck className="text-2xl text-white" />
+            </motion.div>
+            
             <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-              Create account
+              Reset Password
             </h2>
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              Join Tickr to manage your tasks
+              Choose a new password for your account
             </p>
           </div>
 
-          {/* Form */}
           <motion.form
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -163,60 +108,10 @@ const Register = () => {
             onSubmit={handleSubmit}
           >
             <div className="space-y-4">
-              {/* Name */}
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Full Name
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <FiUser className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <input
-                    id="name"
-                    name="name"
-                    type="text"
-                    autoComplete="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    className={`input-field pl-10 ${errors.name ? 'border-red-500 focus:ring-red-500' : ''}`}
-                    placeholder="Enter your full name"
-                  />
-                </div>
-                {errors.name && (
-                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.name}</p>
-                )}
-              </div>
-
-              {/* Email */}
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Email address
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <FiMail className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    className={`input-field pl-10 ${errors.email ? 'border-red-500 focus:ring-red-500' : ''}`}
-                    placeholder="Enter your email"
-                  />
-                </div>
-                {errors.email && (
-                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email}</p>
-                )}
-              </div>
-
-              {/* Password */}
+              {/* New Password */}
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Password
+                  New Password
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -226,11 +121,10 @@ const Register = () => {
                     id="password"
                     name="password"
                     type={showPassword ? 'text' : 'password'}
-                    autoComplete="new-password"
                     value={formData.password}
                     onChange={handleChange}
                     className={`input-field pl-10 pr-10 ${errors.password ? 'border-red-500 focus:ring-red-500' : ''}`}
-                    placeholder="Create a password"
+                    placeholder="Enter new password"
                   />
                   <button
                     type="button"
@@ -244,6 +138,35 @@ const Register = () => {
                     )}
                   </button>
                 </div>
+                
+                {/* Password Strength Indicator */}
+                {formData.password && (
+                  <div className="mt-2">
+                    <div className="flex space-x-1">
+                      {[1, 2, 3, 4, 5].map((level) => (
+                        <div
+                          key={level}
+                          className={`h-1 flex-1 rounded ${
+                            level <= passwordStrength
+                              ? passwordStrength <= 2
+                                ? 'bg-red-500'
+                                : passwordStrength <= 3
+                                ? 'bg-yellow-500'
+                                : 'bg-green-500'
+                              : 'bg-gray-200 dark:bg-gray-700'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                      Password strength: {
+                        passwordStrength <= 2 ? 'Weak' :
+                        passwordStrength <= 3 ? 'Medium' : 'Strong'
+                      }
+                    </p>
+                  </div>
+                )}
+                
                 {errors.password && (
                   <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.password}</p>
                 )}
@@ -262,11 +185,10 @@ const Register = () => {
                     id="confirmPassword"
                     name="confirmPassword"
                     type={showConfirmPassword ? 'text' : 'password'}
-                    autoComplete="new-password"
                     value={formData.confirmPassword}
                     onChange={handleChange}
                     className={`input-field pl-10 pr-10 ${errors.confirmPassword ? 'border-red-500 focus:ring-red-500' : ''}`}
-                    placeholder="Confirm your password"
+                    placeholder="Confirm new password"
                   />
                   <button
                     type="button"
@@ -286,35 +208,33 @@ const Register = () => {
               </div>
             </div>
 
-            {/* Submit button */}
+            {/* Submit Button */}
             <motion.button
-              whileHover={{ scale: localLoading ? 1 : 1.02 }}
-              whileTap={{ scale: localLoading ? 1 : 0.98 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               type="submit"
-              disabled={localLoading}
+              disabled={loading}
               className="w-full btn btn-primary py-3 text-base font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {localLoading ? (
+              {loading ? (
                 <div className="flex items-center justify-center">
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                  Sending verification code...
+                  Updating...
                 </div>
               ) : (
-                'Create account'
+                'Update Password'
               )}
             </motion.button>
 
-            {/* Sign in link */}
+            {/* Back Button */}
             <div className="text-center">
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Already have an account?{' '}
-                <Link
-                  to="/login"
-                  className="font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
-                >
-                  Sign in
-                </Link>
-              </p>
+              <button
+                type="button"
+                onClick={onBack}
+                className="text-sm text-gray-600 hover:text-gray-500 dark:text-gray-400 dark:hover:text-gray-300 font-medium transition-colors"
+              >
+                Back to login
+              </button>
             </div>
           </motion.form>
         </motion.div>
@@ -356,7 +276,7 @@ const Register = () => {
             transition={{ delay: 0.9, duration: 0.6 }}
             className="text-xl text-green-100"
           >
-            Start Your Journey Today
+            Secure & Protected
           </motion.p>
         </motion.div>
 
@@ -394,20 +314,9 @@ const Register = () => {
           }}
           className="absolute top-1/3 left-20 w-8 h-8 bg-white/10 rounded-full"
         />
-        <motion.div
-          animate={{ 
-            x: [-10, 10, -10]
-          }}
-          transition={{ 
-            duration: 4, 
-            repeat: Infinity, 
-            ease: "easeInOut" 
-          }}
-          className="absolute bottom-1/3 right-20 w-12 h-12 bg-white/5 rounded-full"
-        />
       </div>
     </div>
   );
 };
 
-export default Register;
+export default ResetPassword;
