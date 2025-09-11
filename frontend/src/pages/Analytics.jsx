@@ -150,38 +150,43 @@ const Analytics = () => {
           </p>
         </div>
 
-        {/* Controls */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-          <div className="flex items-center space-x-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Time Period
-              </label>
-              <select
-                value={selectedDays}
-                onChange={(e) => setSelectedDays(Number(e.target.value))}
-                className="input-field w-40"
-              >
-                {getDayOptions().map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+        {/* Controls - Only show when there are tasks */}
+        {analytics && analytics.totalTasks > 0 && (
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+            <div className="flex items-center space-x-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Time Period
+                </label>
+                <select
+                  value={selectedDays}
+                  onChange={(e) => setSelectedDays(Number(e.target.value))}
+                  className="input-field w-40"
+                >
+                  {getDayOptions().map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
-        {/* Daily Trends */}
-        {analytics?.dailyStats?.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="card mb-8"
-          >
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
-              Daily Completion Trends
-            </h3>
+        {/* Analytics Content - Only show when there are tasks */}
+        {analytics && analytics.totalTasks > 0 && (
+          <>
+            {/* Daily Trends */}
+            {analytics?.dailyStats?.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="card mb-8"
+              >
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+                  Daily Completion Trends
+                </h3>
             
             {/* Task-wise Trends View - Full Width */}
               <div className="w-full">
@@ -346,6 +351,8 @@ const Analytics = () => {
                 </div>
               </div>
           </motion.div>
+        )}
+        </>
         )}
 
         {/* No Data State */}

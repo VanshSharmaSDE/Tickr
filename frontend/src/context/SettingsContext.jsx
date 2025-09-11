@@ -52,10 +52,23 @@ export const SettingsProvider = ({ children }) => {
   // Apply theme to document
   useEffect(() => {
     const root = window.document.documentElement;
+    
     if (settings.theme === 'dark') {
       root.classList.add('dark');
     } else {
       root.classList.remove('dark');
+    }
+    
+    // Set CSS variables for toast styling
+    const style = root.style;
+    if (settings.theme === 'dark') {
+      style.setProperty('--toast-bg', '#374151');
+      style.setProperty('--toast-color', '#f9fafb');
+      style.setProperty('--toast-border', '#4b5563');
+    } else {
+      style.setProperty('--toast-bg', '#ffffff');
+      style.setProperty('--toast-color', '#111827');
+      style.setProperty('--toast-border', '#e5e7eb');
     }
   }, [settings.theme]);
 

@@ -76,9 +76,13 @@ function AppContent() {
         toastOptions={{
           duration: 2000,
           style: {
-            background: 'var(--toast-bg)',
-            color: 'var(--toast-color)',
-            border: '1px solid var(--toast-border)',
+            background: 'var(--toast-bg, #ffffff)',
+            color: 'var(--toast-color, #111827)',
+            border: '1px solid var(--toast-border, #e5e7eb)',
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+            borderRadius: '0.75rem',
+            padding: '1rem',
+            fontWeight: '500',
           },
           success: {
             iconTheme: {

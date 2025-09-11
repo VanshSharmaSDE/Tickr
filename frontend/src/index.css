@@ -128,4 +128,25 @@
   .dark .horizontal-scroll::-webkit-scrollbar-thumb:hover {
     background: rgba(107, 114, 128, 0.9);
   }
+  
+  /* Toast notification styling fixes */
+  .react-hot-toast {
+    z-index: 9999 !important;
+  }
+  
+  .react-hot-toast > div {
+    background: white !important;
+    color: #111827 !important;
+    border: 1px solid #e5e7eb !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+    border-radius: 0.75rem !important;
+    opacity: 1 !important;
+    backdrop-filter: none !important;
+  }
+  
+  .dark .react-hot-toast > div {
+    background: #374151 !important;
+    color: #f9fafb !important;
+    border: 1px solid #4b5563 !important;
+  }
 }
