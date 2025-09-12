@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FiBarChart, 
   FiCalendar, 
   FiCheckCircle,
+  FiChevronDown
 } from 'react-icons/fi';
 import { analyticsService } from '../services/analyticsService';
 import { useSettings } from '../context/SettingsContext';
@@ -14,6 +15,22 @@ const Analytics = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedDays, setSelectedDays] = useState(28); // Default to 28 days
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // Helper function to conditionally apply animation props
   const getAnimationProps = (animationConfig = {}) => {
@@ -168,17 +185,60 @@ const Analytics = () => {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Time Period
                 </label>
-                <select
-                  value={selectedDays}
-                  onChange={(e) => setSelectedDays(Number(e.target.value))}
-                  className="input-field w-40"
-                >
-                  {getDayOptions().map(option => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative" ref={dropdownRef}>
+                  <motion.button
+                    type="button"
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    className={`input-field w-40 cursor-pointer appearance-none text-left flex items-center justify-between ${
+                      isDropdownOpen ? 'border-white ring-2 ring-white' : ''
+                    }`}
+                  >
+                    <span>{getDayOptions().find(option => option.value === selectedDays)?.label}</span>
+                    <motion.div
+                      {...getAnimationProps({
+                        animate: { rotate: isDropdownOpen ? 180 : 0 },
+                        transition: { duration: 0.3 }
+                      })}
+                    >
+                      <FiChevronDown className="w-4 h-4 text-gray-400" />
+                    </motion.div>
+                  </motion.button>
+                  
+                  <AnimatePresence>
+                    {isDropdownOpen && (
+                      <motion.div
+                        className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-10"
+                        {...getAnimationProps({
+                          initial: { opacity: 0, y: -10, scale: 0.95 },
+                          animate: { opacity: 1, y: 0, scale: 1 },
+                          exit: { opacity: 0, y: -10, scale: 0.95 },
+                          transition: { duration: 0.2 }
+                        })}
+                      >
+                        {getDayOptions().map((option, index) => (
+                          <motion.button
+                            key={option.value}
+                            type="button"
+                            onClick={() => {
+                              setSelectedDays(option.value);
+                              setIsDropdownOpen(false);
+                            }}
+                            className={`w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150 ${
+                              selectedDays === option.value ? 'bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-300' : ''
+                            } ${index === 0 ? 'rounded-t-lg' : ''} ${index === getDayOptions().length - 1 ? 'rounded-b-lg' : ''}`}
+                            {...getAnimationProps({
+                              initial: { opacity: 0, x: -10 },
+                              animate: { opacity: 1, x: 0 },
+                              transition: { delay: index * 0.05, duration: 0.2 }
+                            })}
+                          >
+                            {option.label}
+                          </motion.button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
             </div>
           </div>

@@ -183,8 +183,17 @@ const TaskDetailModal = ({ task, isOpen, onClose, isCompleted }) => {
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const { isCardView, isListView, loading: settingsLoading } = useSettings();
+  const { isCardView, isListView, loading: settingsLoading, animationsEnabled } = useSettings();
   const { tasks, loading, createTask, deleteTask, updateTask, toggleTask } = useTasks();
+  
+  // Helper function to conditionally apply animation props
+  const getAnimationProps = (animationConfig = {}) => {
+    if (!animationsEnabled) {
+      return {}; // Return empty object to disable animations
+    }
+    return animationConfig; // Return the full animation config
+  };
+  
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
   const [showTaskModal, setShowTaskModal] = useState(false);
@@ -332,9 +341,11 @@ const Dashboard = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          {...getAnimationProps({
+            initial: { opacity: 0, y: 20 },
+            animate: { opacity: 1, y: 0 },
+            transition: { duration: 0.5 }
+          })}
           className="mb-8"
         >
           <div className="flex justify-between items-center">
@@ -346,28 +357,61 @@ const Dashboard = () => {
                 Here's your task overview for {formatDate(new Date())}
               </p>
             </div>
-            <button
+            <motion.button
               onClick={() => setShowCreateModal(true)}
-              className="btn btn-primary flex items-center space-x-2"
+              className="btn btn-primary flex items-center space-x-2 group"
+              {...getAnimationProps({
+                whileHover: { 
+                  scale: 1.05,
+                  boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)",
+                  transition: { duration: 0.2 }
+                },
+                whileTap: { 
+                  scale: 0.98,
+                  transition: { duration: 0.1 }
+                }
+              })}
             >
-              <FiPlus className="w-5 h-5" />
+              <motion.div
+                className="group-hover:rotate-90 transition-transform duration-200"
+              >
+                <FiPlus className="w-5 h-5" />
+              </motion.div>
               <span>Create Task</span>
-            </button>
+            </motion.button>
           </div>
         </motion.div>
 
         {/* Stats Grid */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
+          {...getAnimationProps({
+            initial: { opacity: 0, y: 20 },
+            animate: { opacity: 1, y: 0 },
+            transition: { delay: 0.2, duration: 0.5 }
+          })}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
         >
-          <div className="card">
+          <motion.div 
+            className="card"
+            {...getAnimationProps({
+              whileHover: { 
+                y: -4,
+                boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)",
+                transition: { duration: 0.2 }
+              },
+              whileTap: { scale: 0.98 }
+            })}
+          >
             <div className="flex items-center">
-              <div className="p-3 rounded-lg bg-primary-100 dark:bg-primary-900">
+              <motion.div 
+                className="p-3 rounded-lg bg-primary-100 dark:bg-primary-900"
+                {...getAnimationProps({
+                  whileHover: { scale: 1.1, rotate: 5 },
+                  transition: { duration: 0.2 }
+                })}
+              >
                 <FiCheckCircle className="w-6 h-6 text-primary-600 dark:text-primary-400" />
-              </div>
+              </motion.div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
                   Today's Tasks
@@ -377,13 +421,29 @@ const Dashboard = () => {
                 </p>
               </div>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="card">
+          <motion.div 
+            className="card"
+            {...getAnimationProps({
+              whileHover: { 
+                y: -4,
+                boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)",
+                transition: { duration: 0.2 }
+              },
+              whileTap: { scale: 0.98 }
+            })}
+          >
             <div className="flex items-center">
-              <div className="p-3 rounded-lg bg-warning-100 dark:bg-warning-900">
+              <motion.div 
+                className="p-3 rounded-lg bg-warning-100 dark:bg-warning-900"
+                {...getAnimationProps({
+                  whileHover: { scale: 1.1, rotate: -5 },
+                  transition: { duration: 0.2 }
+                })}
+              >
                 <FiClock className="w-6 h-6 text-warning-600 dark:text-warning-400" />
-              </div>
+              </motion.div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
                   Pending
@@ -393,13 +453,29 @@ const Dashboard = () => {
                 </p>
               </div>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="card">
+          <motion.div 
+            className="card"
+            {...getAnimationProps({
+              whileHover: { 
+                y: -4,
+                boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)",
+                transition: { duration: 0.2 }
+              },
+              whileTap: { scale: 0.98 }
+            })}
+          >
             <div className="flex items-center">
-              <div className="p-3 rounded-lg bg-success-100 dark:bg-success-900">
+              <motion.div 
+                className="p-3 rounded-lg bg-success-100 dark:bg-success-900"
+                {...getAnimationProps({
+                  whileHover: { scale: 1.1, rotate: 10 },
+                  transition: { duration: 0.2 }
+                })}
+              >
                 <FiTrendingUp className="w-6 h-6 text-success-600 dark:text-success-400" />
-              </div>
+              </motion.div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
                   Completion Rate
@@ -409,13 +485,29 @@ const Dashboard = () => {
                 </p>
               </div>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="card">
+          <motion.div 
+            className="card"
+            {...getAnimationProps({
+              whileHover: { 
+                y: -4,
+                boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)",
+                transition: { duration: 0.2 }
+              },
+              whileTap: { scale: 0.98 }
+            })}
+          >
             <div className="flex items-center">
-              <div className="p-3 rounded-lg bg-secondary-100 dark:bg-secondary-700">
+              <motion.div 
+                className="p-3 rounded-lg bg-secondary-100 dark:bg-secondary-700"
+                {...getAnimationProps({
+                  whileHover: { scale: 1.1, rotate: -10 },
+                  transition: { duration: 0.2 }
+                })}
+              >
                 <FiTarget className="w-6 h-6 text-secondary-600 dark:text-secondary-400" />
-              </div>
+              </motion.div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
                   Total Tasks
@@ -425,14 +517,16 @@ const Dashboard = () => {
                 </p>
               </div>
             </div>
-          </div>
+          </motion.div>
         </motion.div>
 
         {/* Tasks List */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.5 }}
+          {...getAnimationProps({
+            initial: { opacity: 0, y: 20 },
+            animate: { opacity: 1, y: 0 },
+            transition: { delay: 0.4, duration: 0.5 }
+          })}
         >
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -462,34 +556,75 @@ const Dashboard = () => {
               <p className="text-gray-500 dark:text-gray-400 mb-6">
                 Create your first task to start tracking your daily progress
               </p>
-              <button
+              <motion.button
                 onClick={() => setShowCreateModal(true)}
-                className="btn flex items-center justify-center mx-auto btn-primary"
+                className="btn flex items-center justify-center mx-auto btn-primary group"
+                {...getAnimationProps({
+                  whileHover: { 
+                    scale: 1.05,
+                    y: -2,
+                    boxShadow: "0 10px 25px rgba(0, 0, 0, 0.15)",
+                    transition: { duration: 0.2 }
+                  },
+                  whileTap: { 
+                    scale: 0.98,
+                    y: 0,
+                    transition: { duration: 0.1 }
+                  }
+                })}
               >
-                <FiPlus className="w-4 h-4 mr-2" />
+                <div className="group-hover:rotate-180 transition-transform duration-300 mr-2">
+                  <FiPlus className="w-4 h-4" />
+                </div>
                 Create Your First Task
-              </button>
+              </motion.button>
             </div>
           ) : (
             <motion.div 
               key={isCardView ? 'card-view' : 'list-view'}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
+              {...getAnimationProps({
+                initial: { opacity: 0, y: 10 },
+                animate: { opacity: 1, y: 0 },
+                transition: { duration: 0.3 }
+              })}
               className={isCardView 
                 ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" 
                 : "space-y-3"
               }
             >
-              {tasks.map((task, index) => (
-                isCardView ? (
-                  <motion.div
-                    key={task._id}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: index * 0.05, duration: 0.3 }}
+              <AnimatePresence mode="popLayout">
+                {tasks.map((task, index) => (
+                  isCardView ? (
+                    <motion.div
+                      key={task._id}
+                      {...getAnimationProps({
+                        initial: { opacity: 0, scale: 0.9 },
+                        animate: { opacity: 1, scale: 1 },
+                        exit: { opacity: 0, scale: 0.8, transition: { duration: 0.2 } },
+                        transition: { delay: index * 0.05, duration: 0.3 },
+                        layout: true
+                      })}
+                    >
+                      <TaskCard
+                        task={task}
+                        isCompleted={isTaskCompleted(task._id)}
+                        onToggle={handleTaskToggle}
+                        onEdit={() => setSelectedTask(task)}
+                        onDelete={() => handleDeleteClick(task)}
+                        onView={handleViewTask}
+                      />
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key={task._id}
+                    {...getAnimationProps({
+                      initial: { opacity: 0, x: -20 },
+                      animate: { opacity: 1, x: 0 },
+                      exit: { opacity: 0, x: 20 },
+                      transition: { delay: index * 0.03, duration: 0.3 }
+                    })}
                   >
-                    <TaskCard
+                    <TaskListItem
                       task={task}
                       isCompleted={isTaskCompleted(task._id)}
                       onToggle={handleTaskToggle}
@@ -498,53 +633,58 @@ const Dashboard = () => {
                       onView={handleViewTask}
                     />
                   </motion.div>
-                ) : (
-                  <TaskListItem
-                    key={task._id}
-                    task={task}
-                    isCompleted={isTaskCompleted(task._id)}
-                    onToggle={handleTaskToggle}
-                    onEdit={() => setSelectedTask(task)}
-                    onDelete={() => handleDeleteClick(task)}
-                    onView={handleViewTask}
-                  />
                 )
               ))}
+              </AnimatePresence>
             </motion.div>
           )}
         </motion.div>
 
         {/* Create Task Modal */}
-        <CreateTaskModal
-          isOpen={showCreateModal}
-          onClose={() => setShowCreateModal(false)}
-          onSubmit={createTask}
-        />
+        <AnimatePresence>
+          {showCreateModal && (
+            <CreateTaskModal
+              isOpen={showCreateModal}
+              onClose={() => setShowCreateModal(false)}
+              onSubmit={createTask}
+            />
+          )}
+        </AnimatePresence>
 
         {/* Edit Task Modal */}
-        {selectedTask && (
-          <EditTaskModal
-            task={selectedTask}
-            onClose={() => setSelectedTask(null)}
-            onSubmit={updateTask}
-          />
-        )}
+        <AnimatePresence>
+          {selectedTask && (
+            <EditTaskModal
+              task={selectedTask}
+              onClose={() => setSelectedTask(null)}
+              onSubmit={updateTask}
+            />
+          )}
+        </AnimatePresence>
 
         {/* Task Detail Modal */}
-        <TaskDetailModal
-          task={taskToView ? tasks.find(t => t._id === taskToView._id) || taskToView : null}
-          isOpen={showTaskModal}
-          onClose={handleCloseTaskModal}
-          isCompleted={taskToView ? isTaskCompleted(taskToView._id) : false}
-        />
+        <AnimatePresence>
+          {showTaskModal && taskToView && (
+            <TaskDetailModal
+              task={tasks.find(t => t._id === taskToView._id) || taskToView}
+              isOpen={showTaskModal}
+              onClose={handleCloseTaskModal}
+              isCompleted={isTaskCompleted(taskToView._id)}
+            />
+          )}
+        </AnimatePresence>
 
         {/* Delete Confirmation Modal */}
-        <DeleteConfirmationModal
-          isOpen={showDeleteModal}
-          onClose={handleCancelDelete}
-          onConfirm={handleConfirmDelete}
-          taskTitle={taskToDelete?.title || ''}
-        />
+        <AnimatePresence>
+          {showDeleteModal && taskToDelete && (
+            <DeleteConfirmationModal
+              isOpen={showDeleteModal}
+              onClose={handleCancelDelete}
+              onConfirm={handleConfirmDelete}
+              taskTitle={taskToDelete.title}
+            />
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
@@ -552,12 +692,27 @@ const Dashboard = () => {
 
 // Task Card Component
 const TaskCard = ({ task, isCompleted, onToggle, onEdit, onDelete, onView }) => {
+  const { animationsEnabled } = useSettings();
   const displayTitle = truncateText(task.title, TEXT_LIMITS.TITLE);
   const displayDescription = truncateText(task.description, TEXT_LIMITS.DESCRIPTION);
 
+  // Animation helper for this component
+  const getCardAnimationProps = (config = {}) => {
+    if (!animationsEnabled) return {};
+    return config;
+  };
+
   return (
-    <div
+    <motion.div
       className="card hover:shadow-lg transition-shadow duration-200 overflow-hidden"
+      {...getCardAnimationProps({
+        whileHover: { 
+          y: -4,
+          boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+          transition: { duration: 0.2 }
+        },
+        whileTap: { scale: 0.98 }
+      })}
     >
       <div className="flex justify-between items-start mb-4">
         <div className="flex-1 min-w-0 pr-2">
@@ -584,50 +739,115 @@ const TaskCard = ({ task, isCompleted, onToggle, onEdit, onDelete, onView }) => 
         
         {/* Action Buttons */}
         <div className="flex space-x-2 flex-shrink-0">
-          <button
+          <motion.button
             onClick={() => onView(task)}
             className="p-2 text-gray-400 hover:text-blue-600 transition-colors bg-gray-100 dark:bg-gray-700 rounded"
             title="View full details"
+            {...getCardAnimationProps({
+              whileHover: { 
+                scale: 1.1,
+                backgroundColor: "#dbeafe",
+                transition: { duration: 0.2 }
+              },
+              whileTap: { scale: 0.95 }
+            })}
           >
             <FiEye className="w-4 h-4" />
-          </button>
-          <button
+          </motion.button>
+          <motion.button
             onClick={onEdit}
             className="p-2 text-gray-400 hover:text-primary-600 transition-colors bg-gray-100 dark:bg-gray-700 rounded"
             title="Edit task"
+            {...getCardAnimationProps({
+              whileHover: { 
+                scale: 1.1,
+                backgroundColor: "#e0e7ff",
+                transition: { duration: 0.2 }
+              },
+              whileTap: { scale: 0.95 }
+            })}
           >
-            <FiEdit3 className="w-4 h-4" />
-          </button>
-          <button
+            <motion.div
+              {...getCardAnimationProps({
+                whileHover: { rotate: 15 }
+              })}
+            >
+              <FiEdit3 className="w-4 h-4" />
+            </motion.div>
+          </motion.button>
+          <motion.button
             onClick={onDelete}
             className="p-2 text-gray-400 hover:text-red-600 transition-colors bg-gray-100 dark:bg-gray-700 rounded"
             title="Delete task"
+            {...getCardAnimationProps({
+              whileHover: { 
+                scale: 1.1,
+                backgroundColor: "#fee2e2",
+                transition: { duration: 0.2 }
+              },
+              whileTap: { scale: 0.95 }
+            })}
           >
-            <FiTrash2 className="w-4 h-4" />
-          </button>
+            <motion.div
+              {...getCardAnimationProps({
+                whileHover: { rotate: 10, scale: 1.1 }
+              })}
+            >
+              <FiTrash2 className="w-4 h-4" />
+            </motion.div>
+          </motion.button>
         </div>
       </div>
 
       <div className="flex items-center justify-between">
-        <button
+        <motion.button
           onClick={() => onToggle(task._id)}
           className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all ${
             isCompleted
               ? 'bg-success-100 dark:bg-success-900 text-success-800 dark:text-success-200'
               : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-primary-100 dark:hover:bg-primary-900'
           }`}
+          {...getCardAnimationProps({
+            whileHover: { scale: 1.05 },
+            whileTap: { scale: 0.95 },
+            initial: { scale: 1 },
+            animate: isCompleted ? { 
+              scale: [1, 1.05, 1],
+              transition: { duration: 0.3 }
+            } : { scale: 1 }
+          })}
         >
-          <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-            isCompleted
-              ? 'bg-success-600 border-success-600 text-white'
-              : 'border-gray-300 dark:border-gray-600'
-          }`}>
-            {isCompleted && <FiCheck className="w-3 h-3" />}
-          </div>
+          <motion.div 
+            className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+              isCompleted
+                ? 'bg-success-600 border-success-600 text-white'
+                : 'border-gray-300 dark:border-gray-600'
+            }`}
+            {...getCardAnimationProps({
+              animate: isCompleted ? {
+                scale: [1, 1.2, 1],
+                rotate: [0, 360],
+                transition: { duration: 0.5 }
+              } : { scale: 1, rotate: 0 }
+            })}
+          >
+            <motion.div
+              {...getCardAnimationProps({
+                initial: { scale: 0, opacity: 0 },
+                animate: isCompleted ? { 
+                  scale: 1, 
+                  opacity: 1,
+                  transition: { delay: 0.2, duration: 0.2 }
+                } : { scale: 0, opacity: 0 }
+              })}
+            >
+              {isCompleted && <FiCheck className="w-3 h-3" />}
+            </motion.div>
+          </motion.div>
           <span className="text-sm font-medium">
             {isCompleted ? 'Completed' : 'Mark Complete'}
           </span>
-        </button>
+        </motion.button>
 
         <span className={`text-xs px-2 py-1 rounded-full border ${
           task.priority === 'high'
@@ -639,33 +859,63 @@ const TaskCard = ({ task, isCompleted, onToggle, onEdit, onDelete, onView }) => 
           {task.priority}
         </span>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
 // Task List Item Component (for list view)
 const TaskListItem = ({ task, isCompleted, onToggle, onEdit, onDelete, onView }) => {
+  const { animationsEnabled } = useSettings();
+  
+  const getListAnimationProps = (config = {}) => {
+    if (!animationsEnabled) return {};
+    return config;
+  };
+
   return (
     <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 20 }}
       className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition-shadow duration-200"
+      {...getListAnimationProps({
+        whileHover: { 
+          scale: 1.01,
+          boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+          transition: { duration: 0.2 }
+        }
+      })}
     >
       <div className="flex items-center justify-between">
         {/* Left side - Task info and completion button */}
         <div className="flex items-center space-x-4 flex-1 min-w-0">
           {/* Completion button */}
-          <button
+          <motion.button
             onClick={() => onToggle(task._id)}
             className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${
               isCompleted
                 ? 'bg-success-600 border-success-600 text-white'
                 : 'border-gray-300 dark:border-gray-600 hover:border-primary-500'
             }`}
+            {...getListAnimationProps({
+              whileHover: { scale: 1.1 },
+              whileTap: { scale: 0.9 },
+              animate: isCompleted ? {
+                scale: [1, 1.2, 1],
+                transition: { duration: 0.3 }
+              } : { scale: 1 }
+            })}
           >
-            {isCompleted && <FiCheck className="w-3 h-3" />}
-          </button>
+            <motion.div
+              {...getListAnimationProps({
+                initial: { scale: 0, rotate: 0 },
+                animate: isCompleted ? { 
+                  scale: 1, 
+                  rotate: 360,
+                  transition: { delay: 0.1, duration: 0.3 }
+                } : { scale: 0, rotate: 0 }
+              })}
+            >
+              {isCompleted && <FiCheck className="w-3 h-3" />}
+            </motion.div>
+          </motion.button>
 
           {/* Task content */}
           <div className="flex-1 min-w-0">
