@@ -149,4 +149,36 @@
     color: #f9fafb !important;
     border: 1px solid #4b5563 !important;
   }
+  
+  /* Animation control system */
+  .animations-disabled * {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+    transform: none !important;
+  }
+  
+  .animations-disabled *:before,
+  .animations-disabled *:after {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+    transform: none !important;
+  }
+  
+  /* Specifically target framer-motion elements */
+  .animations-disabled [data-framer-component] {
+    animation: none !important;
+    transition: none !important;
+  }
+  
+  /* Override common animation classes */
+  .animations-disabled .animate-spin,
+  .animations-disabled .animate-bounce,
+  .animations-disabled .animate-pulse,
+  .animations-disabled .animate-ping {
+    animation: none !important;
+  }
 }

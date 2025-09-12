@@ -14,7 +14,8 @@ const getUserSettings = async (req, res) => {
         theme: 'light',
         taskViewMode: 'list',
         notifications: true,
-        language: 'en'
+        language: 'en',
+        animation: true
       });
       await settings.save();
       console.log('Created default settings for user:', userId);
@@ -32,7 +33,7 @@ const getUserSettings = async (req, res) => {
 const updateUserSettings = async (req, res) => {
   try {
     const userId = req.user.userId;
-    const { theme, taskViewMode, notifications, language } = req.body;
+    const { theme, taskViewMode, notifications, language, animation } = req.body;
     
     // Validate theme if provided
     if (theme && !['light', 'dark'].includes(theme)) {
@@ -50,6 +51,7 @@ const updateUserSettings = async (req, res) => {
     if (taskViewMode !== undefined) updateData.taskViewMode = taskViewMode;
     if (notifications !== undefined) updateData.notifications = notifications;
     if (language !== undefined) updateData.language = language;
+    if (animation !== undefined) updateData.animation = animation;
     
     console.log('Updating settings for user:', userId, 'with data:', updateData);
     
@@ -79,7 +81,7 @@ const updateSpecificSetting = async (req, res) => {
     const { setting, value } = req.body;
     
     // Validate setting name
-    const allowedSettings = ['theme', 'taskViewMode', 'notifications', 'language'];
+    const allowedSettings = ['theme', 'taskViewMode', 'notifications', 'language', 'animation'];
     if (!allowedSettings.includes(setting)) {
       return res.status(400).json({ 
         message: `Invalid setting. Allowed settings: ${allowedSettings.join(', ')}` 
@@ -127,7 +129,8 @@ const resetUserSettings = async (req, res) => {
       theme: 'light',
       taskViewMode: 'list',
       notifications: true,
-      language: 'en'
+      language: 'en',
+      animation: true
     };
     
     console.log('Resetting settings to default for user:', userId);

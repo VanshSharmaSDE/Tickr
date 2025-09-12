@@ -6,12 +6,22 @@ import {
   FiCheckCircle,
 } from 'react-icons/fi';
 import { analyticsService } from '../services/analyticsService';
+import { useSettings } from '../context/SettingsContext';
 
 const Analytics = () => {
+  const { animationsEnabled } = useSettings();
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedDays, setSelectedDays] = useState(28); // Default to 28 days
+
+  // Helper function to conditionally apply animation props
+  const getAnimationProps = (animationConfig = {}) => {
+    if (!animationsEnabled) {
+      return {}; // Return empty object to disable animations
+    }
+    return animationConfig; // Return the full animation config
+  };
 
   // Helper function to convert any date to Indian timezone
   const toIndianTime = (dateInput) => {
@@ -180,8 +190,10 @@ const Analytics = () => {
             {/* Daily Trends */}
             {analytics?.dailyStats?.length > 0 && (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                {...getAnimationProps({
+                  initial: { opacity: 0, y: 20 },
+                  animate: { opacity: 1, y: 0 }
+                })}
                 className="card mb-8"
               >
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
@@ -209,9 +221,11 @@ const Analytics = () => {
                         {/* Date Headers */}
                         <div className="flex gap-1 mb-2">
                           <motion.div 
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.3 }}
+                            {...getAnimationProps({
+                              initial: { opacity: 0, x: -20 },
+                              animate: { opacity: 1, x: 0 },
+                              transition: { duration: 0.3 }
+                            })}
                             className="w-36 flex-shrink-0 text-xs text-gray-500 dark:text-gray-400 font-medium"
                           >
                             Task
@@ -222,13 +236,15 @@ const Analytics = () => {
                             return (
                               <motion.div 
                                 key={day.date}
-                                initial={{ opacity: 0, y: -10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ 
-                                  duration: 0.3,
-                                  delay: index * 0.02,
-                                  ease: "easeOut"
-                                }}
+                                {...getAnimationProps({
+                                  initial: { opacity: 0, y: -10 },
+                                  animate: { opacity: 1, y: 0 },
+                                  transition: { 
+                                    duration: 0.3,
+                                    delay: index * 0.02,
+                                    ease: "easeOut"
+                                  }
+                                })}
                                 className="w-8 flex-shrink-0 text-xs text-gray-500 dark:text-gray-400 text-center font-medium"
                               >
                                 {dateStr}
@@ -243,23 +259,27 @@ const Analytics = () => {
                             analytics.tasks.map((task, taskIndex) => (
                               <motion.div 
                                 key={task._id} 
-                                initial={{ opacity: 0, x: -30 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ 
-                                  duration: 0.4,
-                                  delay: taskIndex * 0.1,
-                                  ease: "easeOut"
-                                }}
+                                {...getAnimationProps({
+                                  initial: { opacity: 0, x: -30 },
+                                  animate: { opacity: 1, x: 0 },
+                                  transition: { 
+                                    duration: 0.4,
+                                    delay: taskIndex * 0.1,
+                                    ease: "easeOut"
+                                  }
+                                })}
                                 className="flex gap-1 items-center"
                               >
                                 <motion.div 
-                                  initial={{ opacity: 0, scale: 0.8 }}
-                                  animate={{ opacity: 1, scale: 1 }}
-                                  transition={{ 
-                                    duration: 0.3,
-                                    delay: taskIndex * 0.1 + 0.2,
-                                    ease: "easeOut"
-                                  }}
+                                  {...getAnimationProps({
+                                    initial: { opacity: 0, scale: 0.8 },
+                                    animate: { opacity: 1, scale: 1 },
+                                    transition: { 
+                                      duration: 0.3,
+                                      delay: taskIndex * 0.1 + 0.2,
+                                      ease: "easeOut"
+                                    }
+                                  })}
                                   className={`w-36 flex-shrink-0 text-sm font-medium truncate px-3 py-2 rounded-lg border-l-4 ${
                                     task.priority === 'high' 
                                       ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 border-l-red-500'
@@ -277,21 +297,23 @@ const Analytics = () => {
                                   return (
                                     <motion.div
                                       key={`${task._id}-${day.date}`}
-                                      initial={{ opacity: 0, scale: 0.3, rotateZ: 180 }}
-                                      animate={{ opacity: 1, scale: 1, rotateZ: 0 }}
-                                      transition={{ 
-                                        duration: 0.4,
-                                        delay: taskIndex * 0.1 + dayIndex * 0.015 + 0.3,
-                                        ease: "easeOut",
-                                        type: "spring",
-                                        stiffness: 200,
-                                        damping: 15
-                                      }}
-                                      whileHover={{ 
-                                        scale: 1.15,
-                                        rotateZ: 5,
-                                        transition: { duration: 0.2 }
-                                      }}
+                                      {...getAnimationProps({
+                                        initial: { opacity: 0, scale: 0.3, rotateZ: 180 },
+                                        animate: { opacity: 1, scale: 1, rotateZ: 0 },
+                                        transition: { 
+                                          duration: 0.4,
+                                          delay: taskIndex * 0.1 + dayIndex * 0.015 + 0.3,
+                                          ease: "easeOut",
+                                          type: "spring",
+                                          stiffness: 200,
+                                          damping: 15
+                                        },
+                                        whileHover: { 
+                                          scale: 1.15,
+                                          rotateZ: 5,
+                                          transition: { duration: 0.2 }
+                                        }
+                                      })}
                                       className={`w-8 h-8 flex-shrink-0 rounded border-2 flex items-center justify-center transition-colors cursor-pointer ${
                                         isCompleted
                                           ? 'bg-success-500 border-success-600 hover:bg-success-600 shadow-sm'

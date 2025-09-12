@@ -14,13 +14,15 @@ import {
   FiX,
   FiSettings,
   FiGrid,
-  FiList
+  FiList,
+  FiZap,
+  FiZapOff
 } from 'react-icons/fi';
 import { useState, useEffect, useRef } from 'react';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
-  const { isDark, toggleTheme, isCardView, toggleViewMode, syncing } = useSettings();
+  const { isDark, toggleTheme, isCardView, toggleViewMode, animationsEnabled, toggleAnimations, syncing } = useSettings();
   const location = useLocation();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -154,6 +156,20 @@ const Navbar = () => {
                     {isDark ? <FiSun className="w-4 h-4" /> : <FiMoon className="w-4 h-4" />}
                     <span>{isDark ? 'Light Mode' : 'Dark Mode'}</span>
                   </button>
+
+                  {/* Animation toggle */}
+                  <button
+                    onClick={() => {
+                      toggleAnimations();
+                      setIsSettingsOpen(false);
+                    }}
+                    className="flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 w-full text-left transition-colors"
+                  >
+                    {animationsEnabled ? <FiZapOff className="w-4 h-4" /> : <FiZap className="w-4 h-4" />}
+                    <span>{animationsEnabled ? 'Disable Animations' : 'Enable Animations'}</span>
+                  </button>
+
+                  <div className="border-t border-gray-200 dark:border-gray-700 my-2"></div>
 
                   {/* Logout */}
                   <button

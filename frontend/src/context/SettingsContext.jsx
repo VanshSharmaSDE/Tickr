@@ -17,7 +17,8 @@ export const SettingsProvider = ({ children }) => {
     theme: 'light',
     taskViewMode: 'card',
     notifications: true,
-    language: 'en'
+    language: 'en',
+    animation: true
   });
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
@@ -39,7 +40,8 @@ export const SettingsProvider = ({ children }) => {
           theme: 'light',
           taskViewMode: 'card',
           notifications: true,
-          language: 'en'
+          language: 'en',
+          animation: true
         });
         localStorage.removeItem('userSettings');
       }
@@ -72,6 +74,21 @@ export const SettingsProvider = ({ children }) => {
     }
   }, [settings.theme]);
 
+  // Apply animations setting to document
+  useEffect(() => {
+    const root = window.document.documentElement;
+    
+    if (settings.animation) {
+      root.classList.remove('animations-disabled');
+      root.style.removeProperty('--animation-duration');
+      root.style.removeProperty('--transition-duration');
+    } else {
+      root.classList.add('animations-disabled');
+      root.style.setProperty('--animation-duration', '0s');
+      root.style.setProperty('--transition-duration', '0s');
+    }
+  }, [settings.animation]);
+
   const loadUserSettings = async () => {
     try {
       setLoading(true);
@@ -84,7 +101,8 @@ export const SettingsProvider = ({ children }) => {
           theme: 'light',
           taskViewMode: 'card',
           notifications: true,
-          language: 'en'
+          language: 'en',
+          animation: true
         };
         setSettings(defaultSettings);
         setLoading(false);
@@ -95,15 +113,35 @@ export const SettingsProvider = ({ children }) => {
       const localSettings = localStorage.getItem('userSettings');
       if (localSettings) {
         const parsed = JSON.parse(localSettings);
-        setSettings(parsed);
+        // Ensure all required fields exist (migration for existing users)
+        const migratedSettings = {
+          theme: 'light',
+          taskViewMode: 'card',
+          notifications: true,
+          language: 'en',
+          animation: true,
+          ...parsed // Override with existing saved values
+        };
+        setSettings(migratedSettings);
       }
 
       // Then fetch from backend to ensure sync
       const backendSettings = await settingsService.getUserSettings();
-      setSettings(backendSettings);
+      
+      // Ensure backend settings have all required fields
+      const completeBackendSettings = {
+        theme: 'light',
+        taskViewMode: 'card',
+        notifications: true,
+        language: 'en',
+        animation: true,
+        ...backendSettings // Override with backend values
+      };
+      
+      setSettings(completeBackendSettings);
       
       // Update localStorage with latest backend data
-      localStorage.setItem('userSettings', JSON.stringify(backendSettings));
+      localStorage.setItem('userSettings', JSON.stringify(completeBackendSettings));
       
     } catch (error) {
       console.error('Failed to load settings:', error);
@@ -111,10 +149,37 @@ export const SettingsProvider = ({ children }) => {
       const localSettings = localStorage.getItem('userSettings');
       if (localSettings) {
         try {
-          setSettings(JSON.parse(localSettings));
+          const parsed = JSON.parse(localSettings);
+          // Ensure all required fields exist
+          const migratedSettings = {
+            theme: 'light',
+            taskViewMode: 'card',
+            notifications: true,
+            language: 'en',
+            animation: true,
+            ...parsed
+          };
+          setSettings(migratedSettings);
         } catch (parseError) {
           console.error('Failed to parse local settings:', parseError);
+          // Use complete defaults if parsing fails
+          setSettings({
+            theme: 'light',
+            taskViewMode: 'card',
+            notifications: true,
+            language: 'en',
+            animation: true
+          });
         }
+      } else {
+        // No local settings, use defaults
+        setSettings({
+          theme: 'light',
+          taskViewMode: 'card',
+          notifications: true,
+          language: 'en',
+          animation: true
+        });
       }
       // Don't show error toast on initial load failure
     } finally {
@@ -218,6 +283,12 @@ export const SettingsProvider = ({ children }) => {
     updateSetting('taskViewMode', newViewMode);
   };
 
+  // Animation-specific methods
+  const toggleAnimations = () => {
+    const newAnimation = !settings.animation;
+    updateSetting('animation', newAnimation);
+  };
+
   const setCardView = () => {
     updateSetting('taskViewMode', 'card');
   };
@@ -250,6 +321,10 @@ export const SettingsProvider = ({ children }) => {
     toggleViewMode,
     setCardView,
     setListView,
+    
+    // Animation methods
+    animationsEnabled: settings.animation,
+    toggleAnimations,
     
     // Other settings
     notifications: settings.notifications,

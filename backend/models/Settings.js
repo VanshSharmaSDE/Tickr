@@ -25,6 +25,10 @@ const settingsSchema = new mongoose.Schema({
     language: {
         type: String,
         default: 'en'
+    },
+    animation: {
+        type: Boolean,
+        default: true
     }
 }, {
     timestamps: true
