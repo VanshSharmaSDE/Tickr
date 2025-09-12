@@ -156,7 +156,6 @@
     animation-delay: 0s !important;
     transition-duration: 0s !important;
     transition-delay: 0s !important;
-    transform: none !important;
   }
   
   .animations-disabled *:before,
@@ -165,20 +164,44 @@
     animation-delay: 0s !important;
     transition-duration: 0s !important;
     transition-delay: 0s !important;
-    transform: none !important;
   }
   
   /* Specifically target framer-motion elements */
   .animations-disabled [data-framer-component] {
     animation: none !important;
     transition: none !important;
+    transform: none !important;
   }
   
-  /* Override common animation classes */
-  .animations-disabled .animate-spin,
+  /* Override common animation classes - but NOT loading spinners */
   .animations-disabled .animate-bounce,
-  .animations-disabled .animate-pulse,
-  .animations-disabled .animate-ping {
+  .animations-disabled .animate-pulse {
     animation: none !important;
+  }
+  
+  /* IMPORTANT: Keep ALL loading animations working by being very specific */
+  .animations-disabled .animate-spin {
+    animation: spin 1s linear infinite !important;
+    animation-duration: 1s !important;
+    animation-timing-function: linear !important;
+    animation-iteration-count: infinite !important;
+    animation-name: spin !important;
+  }
+  
+  /* Keep sync/status indicators working */
+  .animations-disabled .animate-ping {
+    animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite !important;
+    animation-duration: 1s !important;
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1) !important;
+    animation-iteration-count: infinite !important;
+    animation-name: ping !important;
+  }
+  
+  /* Additional safety for loading spinners */
+  .animations-disabled .loading-spinner,
+  .animations-disabled .spinner,
+  .animations-disabled [class*="spin"],
+  .animations-disabled [data-loading="true"] {
+    animation: spin 1s linear infinite !important;
   }
 }
