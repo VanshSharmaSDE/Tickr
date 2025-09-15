@@ -354,47 +354,49 @@ const Analytics = () => {
                                   const taskProgress = analytics.taskProgressByDate?.[task._id]?.[day.date];
                                   const isCompleted = taskProgress?.completed;
                                   
-                                  return (
+                                    return (
                                     <motion.div
                                       key={`${task._id}-${day.date}`}
                                       {...getAnimationProps({
-                                        initial: { opacity: 0, scale: 0.3, rotateZ: 180 },
-                                        animate: { opacity: 1, scale: 1, rotateZ: 0 },
-                                        transition: { 
-                                          duration: 0.4,
-                                          delay: taskIndex * 0.1 + dayIndex * 0.015 + 0.3,
-                                          ease: "easeOut",
-                                          type: "spring",
-                                          stiffness: 200,
-                                          damping: 15
-                                        },
-                                        whileHover: { 
-                                          scale: 1.15,
-                                          rotateZ: 5,
-                                          transition: { duration: 0.2 }
-                                        }
+                                      initial: { opacity: 0, scale: 0.3, rotateZ: 180 },
+                                      animate: { opacity: 1, scale: 1, rotateZ: 0 },
+                                      transition: { 
+                                        duration: 0.4,
+                                        delay: taskIndex * 0.1 + dayIndex * 0.015 + 0.3,
+                                        ease: "easeOut",
+                                        type: "spring",
+                                        stiffness: 200,
+                                        damping: 15
+                                      },
+                                      whileHover: { 
+                                        scale: 1.15,
+                                        rotateZ: 5,
+                                        transition: { duration: 0.2 }
+                                      }
                                       })}
                                       className={`w-8 h-8 flex-shrink-0 rounded border-2 flex items-center justify-center transition-colors cursor-pointer ${
-                                        isCompleted
-                                          ? 'bg-success-500 border-success-600 hover:bg-success-600 shadow-sm'
-                                          : 'bg-gray-200 dark:bg-gray-600 border-gray-300 dark:border-gray-500 hover:bg-gray-300 dark:hover:bg-gray-500'
+                                      isCompleted
+                                        ? 'bg-success-500 border-success-600 hover:bg-success-600 shadow-sm'
+                                        : 'bg-gray-200 dark:bg-gray-600 border-gray-300 dark:border-gray-500 hover:bg-gray-300 dark:hover:bg-gray-500'
                                       }`}
                                     >
                                       {isCompleted && (
-                                        <motion.div
-                                          initial={{ opacity: 0, scale: 0 }}
-                                          animate={{ opacity: 1, scale: 1 }}
-                                          transition={{ 
-                                            duration: 0.3,
-                                            delay: taskIndex * 0.1 + dayIndex * 0.015 + 0.5,
-                                            ease: "easeOut"
-                                          }}
-                                        >
-                                          <FiCheckCircle className="w-4 h-4 text-white" />
-                                        </motion.div>
+                                      <motion.div
+                                        {...getAnimationProps({
+                                        initial: { opacity: 0, scale: 0 },
+                                        animate: { opacity: 1, scale: 1 },
+                                        transition: { 
+                                          duration: 0.3,
+                                          delay: taskIndex * 0.1 + dayIndex * 0.015 + 0.5,
+                                          ease: "easeOut"
+                                        }
+                                        })}
+                                      >
+                                        <FiCheckCircle className="w-4 h-4 text-white" />
+                                      </motion.div>
                                       )}
                                     </motion.div>
-                                  );
+                                    );
                                 })}
                               </motion.div>
                             ))
