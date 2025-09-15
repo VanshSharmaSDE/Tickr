@@ -130,7 +130,6 @@ const OTPVerification = ({
             className="mt-8 space-y-6"
             onSubmit={handleSubmit}
           >
-            {/* OTP Input */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-4 text-center">
                 Enter verification code
@@ -141,9 +140,12 @@ const OTPVerification = ({
                     key={index}
                     ref={(el) => (inputRefs.current[index] = el)}
                     type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    autoComplete="one-time-code"
                     maxLength="1"
                     value={digit}
-                    onChange={(e) => handleChange(index, e.target.value)}
+                    onChange={(e) => handleChange(index, e.target.value.replace(/\D/g, ''))}
                     onKeyDown={(e) => handleKeyDown(index, e)}
                     className="w-12 h-12 text-center text-xl font-semibold border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
                     placeholder="0"

@@ -194,6 +194,18 @@ export const SettingsProvider = ({ children }) => {
       setSettings(newSettings);
       localStorage.setItem('userSettings', JSON.stringify(newSettings));
 
+      // Show success toast based on setting type
+      const settingMessages = {
+        theme: `Theme changed to ${value}`,
+        taskViewMode: `View mode changed to ${value}`,
+        animation: `Animations ${value ? 'enabled' : 'disabled'}`,
+        notifications: `Notifications ${value ? 'enabled' : 'disabled'}`,
+        language: `Language changed to ${typeof value === 'string' ? value.toUpperCase() : value}`
+      };
+
+      const message = settingMessages[key] || 'Setting updated successfully';
+      toast.success(message);
+
       // Check if user is authenticated
       const token = localStorage.getItem('token');
       if (!token) {
@@ -228,6 +240,10 @@ export const SettingsProvider = ({ children }) => {
       const updatedSettings = { ...settings, ...newSettings };
       setSettings(updatedSettings);
       localStorage.setItem('userSettings', JSON.stringify(updatedSettings));
+
+      // Show success toast
+      const settingCount = Object.keys(newSettings).length;
+      toast.success(`${settingCount} setting${settingCount > 1 ? 's' : ''} updated successfully`);
 
       // Check if user is authenticated
       const token = localStorage.getItem('token');
