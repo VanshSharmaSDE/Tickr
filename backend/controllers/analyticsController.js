@@ -168,6 +168,130 @@ const getAnalytics = async (req, res) => {
   }
 };
 
+// Get tasks ranked by total completion count (all time - most completed to least completed)
+const getTasksRankedByCompletion = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    
+    console.log('Getting all-time task completion rankings for user:', userId);
+    
+    // Get all user tasks
+    const userTasks = await Task.find({ user: userId });
+    
+    if (userTasks.length === 0) {
+      return res.json({
+        message: 'No tasks found',
+        tasks: []
+      });
+    }
+
+    const taskIds = userTasks.map(task => task._id);
+    
+    // Get ALL task progress for this user (no date filtering)
+    const taskProgress = await TaskProgress.find({
+      user: userId,
+      task: { $in: taskIds },
+      completed: true // Only count completed tasks
+    }).populate('task');
+    
+    // Count completions for each task
+    const taskCompletionCounts = {};
+    
+    // Initialize all tasks with 0 completions
+    userTasks.forEach(task => {
+      taskCompletionCounts[task._id.toString()] = {
+        task: task,
+        completionCount: 0,
+        completions: []
+      };
+    });
+    
+    // Count actual completions
+    taskProgress.forEach(progress => {
+      const taskId = progress.task._id.toString();
+      if (taskCompletionCounts[taskId]) {
+        taskCompletionCounts[taskId].completionCount++;
+        taskCompletionCounts[taskId].completions.push({
+          date: getIndiaDateString(progress.date),
+          completedAt: progress.completedAt
+        });
+      }
+    });
+    
+    // Convert to array and sort by completion count (highest to lowest)
+    const rankedTasks = Object.values(taskCompletionCounts)
+      .sort((a, b) => {
+        // First sort by completion count (descending)
+        if (b.completionCount !== a.completionCount) {
+          return b.completionCount - a.completionCount;
+        }
+        // If completion counts are equal, sort by task creation date (newest first)
+        return new Date(b.task.createdAt) - new Date(a.task.createdAt);
+      })
+      .map((item, index) => ({
+        rank: index + 1,
+        taskId: item.task._id,
+        title: item.task.title,
+        description: item.task.description,
+        priority: item.task.priority,
+        category: item.task.category,
+        completionCount: item.completionCount,
+        createdAt: item.task.createdAt,
+        isCompleted: item.task.isCompleted,
+        firstCompletedAt: item.completions.length > 0 
+          ? item.completions[0].completedAt 
+          : null,
+        lastCompletedAt: item.completions.length > 0 
+          ? item.completions[item.completions.length - 1].completedAt 
+          : null
+      }));
+
+    // Calculate summary stats
+    const totalTasks = rankedTasks.length;
+    const tasksWithCompletions = rankedTasks.filter(task => task.completionCount > 0).length;
+    const tasksWithoutCompletions = totalTasks - tasksWithCompletions;
+    const totalCompletions = rankedTasks.reduce((sum, task) => sum + task.completionCount, 0);
+    const averageCompletionsPerTask = totalTasks > 0 ? (totalCompletions / totalTasks).toFixed(2) : 0;
+    
+    // Top performers (tasks with most completions)
+    const topPerformers = rankedTasks.slice(0, 10);
+    
+    // Bottom performers (tasks with least completions, excluding 0)
+    const tasksWithNonZeroCompletions = rankedTasks.filter(task => task.completionCount > 0);
+    const bottomPerformers = tasksWithNonZeroCompletions.slice(-10).reverse();
+
+    const response = {
+      success: true,
+      summary: {
+        totalTasks,
+        tasksWithCompletions,
+        tasksWithoutCompletions,
+        totalCompletions,
+        averageCompletionsPerTask: parseFloat(averageCompletionsPerTask),
+        mostCompletedTask: rankedTasks[0] || null,
+        leastCompletedTask: tasksWithNonZeroCompletions.length > 0 
+          ? tasksWithNonZeroCompletions[tasksWithNonZeroCompletions.length - 1] 
+          : null
+      },
+      topPerformers,
+      bottomPerformers,
+      allTasks: rankedTasks,
+      generatedAt: new Date().toISOString()
+    };
+    
+    res.json(response);
+    
+  } catch (error) {
+    console.error('Task ranking error:', error);
+    res.status(500).json({ 
+      message: 'Failed to fetch task rankings',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
+  }
+};
+
+
 module.exports = {
-  getAnalytics
+  getAnalytics,
+  getTasksRankedByCompletion
 };

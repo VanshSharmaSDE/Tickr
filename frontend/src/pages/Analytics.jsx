@@ -4,7 +4,10 @@ import {
   FiBarChart, 
   FiCalendar, 
   FiCheckCircle,
-  FiChevronDown
+  FiChevronDown,
+  FiTarget,
+  FiStar,
+  FiAward
 } from 'react-icons/fi';
 import { analyticsService } from '../services/analyticsService';
 import { useSettings } from '../context/SettingsContext';
@@ -12,7 +15,9 @@ import { useSettings } from '../context/SettingsContext';
 const Analytics = () => {
   const { animationsEnabled } = useSettings();
   const [analytics, setAnalytics] = useState(null);
+  const [taskRankings, setTaskRankings] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [rankingsLoading, setRankingsLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedDays, setSelectedDays] = useState(28); // Default to 28 days
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -70,6 +75,10 @@ const Analytics = () => {
     fetchAnalytics();
   }, [selectedDays]);
 
+  useEffect(() => {
+    fetchTaskRankings();
+  }, []);
+
   const fetchAnalytics = async () => {
     try {
       setLoading(true);
@@ -84,6 +93,19 @@ const Analytics = () => {
     }
   };
 
+  const fetchTaskRankings = async () => {
+    try {
+      setRankingsLoading(true);
+      const data = await analyticsService.getTaskRankings();
+      setTaskRankings(data);
+    } catch (err) {
+      console.error('Task rankings error:', err);
+      // Don't set main error state, just log it
+    } finally {
+      setRankingsLoading(false);
+    }
+  };
+
   const getDayOptions = () => [
     { value: 28, label: 'Last 28 days' },
     { value: 56, label: 'Last 56 days' },
@@ -91,20 +113,6 @@ const Analytics = () => {
     { value: 180, label: 'Last 6 months' },
     { value: 365, label: 'Last year' }
   ];
-
-  const formatDate = (dateString) => {
-    try {
-      if (!dateString) return '';
-      const indianDate = toIndianTime(dateString);
-      const day = indianDate.getUTCDate();
-      const month = indianDate.getUTCMonth() + 1;
-      
-      return `${day}/${month}`;
-    } catch (error) {
-      console.error('Error formatting date:', error);
-      return dateString || '';
-    }
-  };
 
   const formatDateForTrends = (dateString) => {
     try {
@@ -121,9 +129,9 @@ const Analytics = () => {
   };
 
   const getCurrentYear = () => {
-    if (!analytics?.dailyStats?.length) return '';
+    if (!analytics?.dailyStats?.length) return new Date().getFullYear();
     const latestDate = analytics.dailyStats[analytics.dailyStats.length - 1]?.date;
-    if (!latestDate) return '';
+    if (!latestDate) return new Date().getFullYear();
     
     try {
       const indianDate = toIndianTime(latestDate);
@@ -434,6 +442,173 @@ const Analytics = () => {
                   </div>
                 </div>
               </div>
+          </motion.div>
+        )}
+
+        {/* Task Rankings Section */}
+        {taskRankings && taskRankings.allTasks && taskRankings.allTasks.length > 0 && (
+          <motion.div
+            {...getAnimationProps({
+              initial: { opacity: 0, y: 20 },
+              animate: { opacity: 1, y: 0 },
+              transition: { delay: 0.3 }
+            })}
+            className="card mb-8"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <motion.div 
+                className="flex items-center space-x-3"
+                {...getAnimationProps({
+                  whileHover: { scale: 1.02 },
+                  transition: { duration: 0.2 }
+                })}
+              >
+                <motion.div 
+                  className="p-2 bg-amber-100 dark:bg-amber-900 rounded-lg"
+                  {...getAnimationProps({
+                    whileHover: { scale: 1.1, rotate: 10 },
+                    transition: { duration: 0.2 }
+                  })}
+                >
+                  <FiAward className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                </motion.div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Task Performance Rankings
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    All-time completion counts • Most to least completed
+                  </p>
+                </div>
+              </motion.div>
+              {taskRankings.summary && (
+                <motion.div 
+                  className="text-right"
+                  {...getAnimationProps({
+                    initial: { opacity: 0, x: 20 },
+                    animate: { opacity: 1, x: 0 },
+                    transition: { delay: 0.2 }
+                  })}
+                >
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">
+                    {taskRankings.summary.totalCompletions} total completions
+                  </p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    {taskRankings.summary.tasksWithCompletions} / {taskRankings.summary.totalTasks} tasks completed
+                  </p>
+                </motion.div>
+              )}
+            </div>
+
+            {rankingsLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                <span className="ml-3 text-gray-600 dark:text-gray-400">Loading rankings...</span>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {taskRankings.allTasks.map((task, index) => (
+                  <motion.div
+                    key={task.taskId}
+                    {...getAnimationProps({
+                      initial: { opacity: 0, x: -20 },
+                      animate: { opacity: 1, x: 0 },
+                      whileHover: { 
+                        scale: 1.02, 
+                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+                        transition: { duration: 0.2 }
+                      },
+                      transition: { delay: index * 0.05 }
+                    })}
+                    className="flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center space-x-4 flex-1">
+                      <div className="flex items-center space-x-2">
+                        <span className={`text-sm font-bold px-2 py-1 rounded ${
+                          task.rank === 1 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                          task.rank === 2 ? 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' :
+                          task.rank === 3 ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200' :
+                          'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                        }`}>
+                          #{task.rank}
+                        </span>
+                        {task.rank <= 3 && (
+                          <div className="text-lg">
+                            {task.rank === 1 ? '🥇' : task.rank === 2 ? '🥈' : '🥉'}
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-gray-900 dark:text-white truncate">
+                          {task.title}
+                        </h4>
+                        {task.description && (
+                          <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                            {task.description}
+                          </p>
+                        )}
+                        <div className="flex items-center space-x-4 mt-1">
+                          <span className={`text-xs px-2 py-1 rounded-full ${
+                            task.priority === 'high' ? 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300' :
+                            task.priority === 'medium' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' :
+                            'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
+                          }`}>
+                            {task.priority}
+                          </span>
+                          {task.category && (
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                              {task.category}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="text-right">
+                      <div className="flex items-center space-x-2">
+                        <FiStar className="w-4 h-4 text-amber-500" />
+                        <span className="text-lg font-bold text-gray-900 dark:text-white">
+                          {task.completionCount}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">
+                        completion{task.completionCount !== 1 ? 's' : ''}
+                      </p>
+                      {task.completionCount === 0 && (
+                        <span className="text-xs text-red-500 dark:text-red-400">Never completed</span>
+                      )}
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+
+            {taskRankings.summary && taskRankings.summary.tasksWithoutCompletions > 0 && (
+              <motion.div 
+                className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800"
+                {...getAnimationProps({
+                  initial: { opacity: 0, y: 10 },
+                  animate: { opacity: 1, y: 0 },
+                  whileHover: { scale: 1.01 },
+                  transition: { delay: 0.5 }
+                })}
+              >
+                <p className="text-sm text-amber-800 dark:text-amber-200">
+                  <motion.span
+                    {...getAnimationProps({
+                      whileHover: { rotate: 5 },
+                      transition: { duration: 0.2 }
+                    })}
+                    className="inline-block"
+                  >
+                    <FiTarget className="w-4 h-4 inline mr-1" />
+                  </motion.span>
+                  {taskRankings.summary.tasksWithoutCompletions} task{taskRankings.summary.tasksWithoutCompletions !== 1 ? 's' : ''} haven't been completed yet. 
+                  Consider focusing on these to improve your overall completion rate!
+                </p>
+              </motion.div>
+            )}
           </motion.div>
         )}
         </>
