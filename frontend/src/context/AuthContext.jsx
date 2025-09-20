@@ -97,6 +97,10 @@ export const AuthProvider = ({ children }) => {
       });
       
       toast.success(`Welcome back, ${user.name}!`);
+      
+      // Reload page to ensure all settings are properly fetched
+      window.location.reload();
+      
       return { success: true };
     } catch (error) {
       const errorData = error.response?.data;

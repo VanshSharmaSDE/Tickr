@@ -9,6 +9,8 @@ import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import Dashboard from './pages/Dashboard';
 import Analytics from './pages/Analytics';
+import LandingPage from './pages/LandingPage';
+import NotFound from './pages/NotFound';
 
 // Components
 import Navbar from './components/Navbar';
@@ -30,6 +32,12 @@ function AppContent() {
       {user && <Navbar />}
       
       <Routes>
+        {/* Landing Page - Show to non-authenticated users */}
+        <Route 
+          path="/" 
+          element={user ? <Navigate to="/dashboard" /> : <LandingPage />} 
+        />
+        
         {/* Public Routes */}
         <Route 
           path="/login" 
@@ -57,16 +65,10 @@ function AppContent() {
           </ProtectedRoute>
         } />
         
-        {/* Default redirect */}
-        <Route 
-          path="/" 
-          element={<Navigate to={user ? "/dashboard" : "/login"} />} 
-        />
-        
-        {/* Catch all route */}
+        {/* 404 Not Found Route */}
         <Route 
           path="*" 
-          element={<Navigate to={user ? "/dashboard" : "/login"} />} 
+          element={<NotFound />} 
         />
       </Routes>
 
