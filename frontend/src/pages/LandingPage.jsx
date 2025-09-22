@@ -161,6 +161,7 @@ const LandingPage = () => {
         </div>
       </nav>
 
+
       {/* Hero Section */}
       <section className="relative overflow-hidden py-20 sm:py-32">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -346,7 +347,7 @@ const LandingPage = () => {
       </section>
 
       {/* Solution Section */}
-      <section className="py-20 bg-gradient-to-r from-primary-50 to-primary-100 dark:from-gray-800 dark:to-gray-900">
+      <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             className="text-center mb-16"
@@ -357,7 +358,7 @@ const LandingPage = () => {
             })}
           >
             <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              💡 The Solution: Tickr
+             The Solution: Tickr
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto mb-12">
               A fullstack task management solution built to solve real developer and student productivity challenges.
@@ -376,7 +377,7 @@ const LandingPage = () => {
               <div className="grid md:grid-cols-2 gap-8">
                 <div>
                   <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-                    🚀 Key Features
+                    Key Features
                   </h3>
                   <div className="space-y-4">
                     <motion.div
@@ -451,7 +452,7 @@ const LandingPage = () => {
 
                 <div>
                   <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-                    🎯 Why I Built This
+                    Why I Built This
                   </h3>
                   <div className="space-y-4 text-gray-600 dark:text-gray-300">
                     <motion.p
@@ -461,7 +462,7 @@ const LandingPage = () => {
                         transition: { duration: 0.5, delay: 0.8 },
                       })}
                     >
-                      <strong className="text-red-500">❌ Problem:</strong> Existing task management tools were either too complex for simple personal use, filled with features I didn't need, or hard to stay consistent with.
+                      <strong className="text-red-500">Problem:</strong> Existing task management tools were either too complex for simple personal use, filled with features I didn't need, or hard to stay consistent with.
                     </motion.p>
                     
                     <motion.p
@@ -471,7 +472,7 @@ const LandingPage = () => {
                         transition: { duration: 0.5, delay: 0.9 },
                       })}
                     >
-                      <strong className="text-green-500">✅ Solution:</strong> "If the existing tools don't fit me, why not create one that does?" So I turned this problem into a project and built my own tool.
+                      <strong className="text-green-500">Solution:</strong> "If the existing tools don't fit me, why not create one that does?" So I turned this problem into a project and built my own tool.
                     </motion.p>
 
                     <motion.div
@@ -482,7 +483,7 @@ const LandingPage = () => {
                         transition: { duration: 0.5, delay: 1.0 },
                       })}
                     >
-                      <p className="font-semibold mb-2">🚀 The Result</p>
+                      <p className="font-semibold mb-2">The Result</p>
                       <p className="text-sm">
                         This may not be a huge product, but it represents how we as developers can solve real-life problems with our skills, and sometimes even help others who face the same challenges.
                       </p>
@@ -496,7 +497,7 @@ const LandingPage = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 bg-white dark:bg-gray-800">
+      <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             className="text-center mb-16"
@@ -541,7 +542,7 @@ const LandingPage = () => {
       </section>
 
       {/* Open Source & Contribution */}
-      <section className="py-20 bg-gradient-to-r from-primary-50 to-primary-100 dark:from-gray-900 dark:to-gray-800">
+      <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             className="text-center mb-16"
@@ -578,13 +579,6 @@ const LandingPage = () => {
               <p className="text-gray-600 dark:text-gray-300 mb-4">
                 Show your support by starring the repository and following the project's progress.
               </p>
-              <a
-                href="#"
-                className="inline-flex items-center text-primary-600 dark:text-primary-400 font-medium hover:text-primary-700 dark:hover:text-primary-300 transition-colors"
-              >
-                <FiStar className="w-4 h-4 mr-2" />
-                Star Repository
-              </a>
             </motion.div>
 
             <motion.div
@@ -605,13 +599,6 @@ const LandingPage = () => {
               <p className="text-gray-600 dark:text-gray-300 mb-4">
                 Submit pull requests, fix bugs, or add new features. Every contribution counts!
               </p>
-              <a
-                href="#"
-                className="inline-flex items-center text-green-600 dark:text-green-400 font-medium hover:text-green-700 dark:hover:text-green-300 transition-colors"
-              >
-                <FiGitPullRequest className="w-4 h-4 mr-2" />
-                View Issues
-              </a>
             </motion.div>
 
             <motion.div
@@ -632,13 +619,6 @@ const LandingPage = () => {
               <p className="text-gray-600 dark:text-gray-300 mb-4">
                 Connect with other developers, share ideas, and discuss new features.
               </p>
-              <a
-                href="#"
-                className="inline-flex items-center text-purple-600 dark:text-purple-400 font-medium hover:text-purple-700 dark:hover:text-purple-300 transition-colors"
-              >
-                <FiUsers className="w-4 h-4 mr-2" />
-                Join Discord
-              </a>
             </motion.div>
 
             <motion.div
@@ -659,13 +639,6 @@ const LandingPage = () => {
               <p className="text-gray-600 dark:text-gray-300 mb-4">
                 Help others discover Tickr by sharing your experience and feedback.
               </p>
-              <a
-                href="#"
-                className="inline-flex items-center text-red-600 dark:text-red-400 font-medium hover:text-red-700 dark:hover:text-red-300 transition-colors"
-              >
-                <FiHeart className="w-4 h-4 mr-2" />
-                Share Project
-              </a>
             </motion.div>
           </div>
 
@@ -680,14 +653,14 @@ const LandingPage = () => {
           >
             <div className="bg-gradient-to-r from-primary-500 to-primary-600 p-8 rounded-3xl shadow-xl">
               <h3 className="text-2xl font-bold text-white mb-4">
-                🚀 Ready to Make an Impact?
+                Ready to Make an Impact?
               </h3>
               <p className="text-primary-100 mb-6 max-w-2xl mx-auto">
                 Whether you're a seasoned developer or just starting out, there's a place for you in the Tickr community. Let's build something amazing together!
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <a
-                  href="#"
+                  href="https://github.com/VanshSharmaSDE/Tickr"
                   className="bg-white text-primary-600 px-6 py-3 rounded-xl font-semibold hover:bg-gray-100 transition-all inline-flex items-center justify-center"
                 >
                   <FiGithub className="w-5 h-5 mr-2" />
@@ -706,49 +679,6 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-primary-500 to-primary-600">
-        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <motion.div
-            {...getAnimationProps({
-              initial: { opacity: 0, y: 30 },
-              animate: { opacity: 1, y: 0 },
-              transition: { duration: 0.6 },
-            })}
-          >
-            <h2 className="text-4xl font-bold text-white mb-6">
-              Ready to Try This Personal Project?
-            </h2>
-            <p className="text-xl text-blue-100 mb-10">
-              Built by a developer who solved their own productivity problems.
-              Now open for everyone to use and improve.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <motion.button
-                className="bg-white text-blue-600 px-8 py-4 rounded-xl font-semibold text-lg flex items-center justify-center space-x-2 opacity-75 cursor-not-allowed"
-                disabled
-              >
-                <FiSmartphone className="w-5 h-5" />
-                <span>Android App (In Development)</span>
-              </motion.button>
-
-              <motion.button
-                className="border-2 border-white text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-white hover:text-blue-600 transition-all"
-                {...getAnimationProps({
-                  whileHover: { scale: 1.05 },
-                  whileTap: { scale: 0.95 },
-                })}
-              >
-                <Link to="/register" className="flex items-center space-x-2">
-                  <FiCheckCircle className="w-5 h-5" />
-                  <span>Try Web Version Now</span>
-                </Link>
-              </motion.button>
-            </div>
-          </motion.div>
-        </div>
-      </section>
 
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-16">
@@ -776,7 +706,7 @@ const LandingPage = () => {
               <h4 className="font-semibold mb-4">Project</h4>
               <ul className="space-y-2 text-gray-400">
                 <li>
-                  <a href="#" className="hover:text-white transition-colors">
+                  <a href="https://github.com/VanshSharmaSDE/Tickr" className="hover:text-white transition-colors">
                     Star on GitHub
                   </a>
                 </li>
