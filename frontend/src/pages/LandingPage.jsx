@@ -75,10 +75,6 @@ const LandingPage = () => {
   ];
 
 
-
-      
-
-
   const stats = [
     {
       label: "Project Status",
@@ -666,13 +662,13 @@ const LandingPage = () => {
                   <FiGithub className="w-5 h-5 mr-2" />
                   View on GitHub
                 </a>
-                <a
-                  href="#"
+                <Link
+                  to="/contribute"
                   className="border-2 border-white text-white px-6 py-3 rounded-xl font-semibold hover:bg-white hover:text-primary-600 transition-all inline-flex items-center justify-center"
                 >
                   <FiCode className="w-5 h-5 mr-2" />
                   Contributing Guide
-                </a>
+                </Link>
               </div>
             </div>
           </motion.div>
@@ -712,6 +708,14 @@ const LandingPage = () => {
                 </li>
                 <li>
                   <Link
+                    to="/contribute"
+                    className="hover:text-white transition-colors"
+                  >
+                    Contribution Guide
+                  </Link>
+                </li>
+                <li>
+                  <Link
                     to="/register"
                     className="hover:text-white transition-colors"
                   >
@@ -745,9 +749,9 @@ const LandingPage = () => {
                   </a>
                 </li>
                 <li>
-                  <a href="" className="hover:text-white transition-colors">
+                  <Link to="/contact" className="hover:text-white transition-colors">
                     Contact Me
-                  </a>
+                  </Link>
                 </li>
                 <li>
                   <a href="https://www.linkedin.com/feed/update/urn:li:activity:7371928560506392578/" className="hover:text-white transition-colors">

@@ -10,6 +10,8 @@ import ForgotPassword from './pages/ForgotPassword';
 import Dashboard from './pages/Dashboard';
 import Analytics from './pages/Analytics';
 import LandingPage from './pages/LandingPage';
+import Contact from './pages/Contact';
+import ContributionGuide from './pages/ContributionGuide';
 import NotFound from './pages/NotFound';
 
 // Components
@@ -50,6 +52,18 @@ function AppContent() {
         <Route 
           path="/forgot-password" 
           element={user ? <Navigate to="/dashboard" /> : <ForgotPassword />} 
+        />
+        
+        {/* Contact Page - Public route */}
+        <Route 
+          path="/contact" 
+          element={<Contact />} 
+        />
+        
+        {/* Contribution Guide - Public route */}
+        <Route 
+          path="/contribute" 
+          element={<ContributionGuide />} 
         />
         
         {/* Protected Routes */}
