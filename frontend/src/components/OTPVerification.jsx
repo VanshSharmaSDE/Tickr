@@ -12,7 +12,7 @@ const OTPVerification = ({
   resendLoading = false 
 }) => {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
-  const [timeLeft, setTimeLeft] = useState(300); // 5 minutes
+  const [timeLeft, setTimeLeft] = useState(600); // 5 minutes
   const [canResend, setCanResend] = useState(false);
   const inputRefs = useRef([]);
 

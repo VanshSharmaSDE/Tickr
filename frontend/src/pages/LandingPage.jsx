@@ -702,7 +702,7 @@ const LandingPage = () => {
               <h4 className="font-semibold mb-4">Project</h4>
               <ul className="space-y-2 text-gray-400">
                 <li>
-                  <a href="https://github.com/VanshSharmaSDE/Tickr" className="hover:text-white transition-colors">
+                  <a href="https://github.com/VanshSharmaSDE/Tickr" target="_blank" className="hover:text-white transition-colors">
                     Star on GitHub
                   </a>
                 </li>
@@ -739,12 +739,12 @@ const LandingPage = () => {
               <h4 className="font-semibold mb-4">Developer</h4>
               <ul className="space-y-2 text-gray-400">
                 <li>
-                  <a href="https://www.linkedin.com/in/vansh-vyas-b7792b258/" className="hover:text-white transition-colors">
+                  <a href="https://www.linkedin.com/in/vansh-vyas-b7792b258/" target="_blank" className="hover:text-white transition-colors">
                     LinkedIn Profile
                   </a>
                 </li>
                 <li>
-                  <a href="https://github.com/VanshSharmaSDE" className="hover:text-white transition-colors">
+                  <a href="https://github.com/VanshSharmaSDE" target="_blank" className="hover:text-white transition-colors">
                     GitHub Profile
                   </a>
                 </li>
@@ -754,7 +754,7 @@ const LandingPage = () => {
                   </Link>
                 </li>
                 <li>
-                  <a href="https://www.linkedin.com/feed/update/urn:li:activity:7371928560506392578/" className="hover:text-white transition-colors">
+                  <a href="https://www.linkedin.com/feed/update/urn:li:activity:7371928560506392578/" target="_blank" className="hover:text-white transition-colors">
                     Project Story
                   </a>
                 </li>

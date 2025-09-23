@@ -82,6 +82,18 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
+  // Function to reset user settings and trigger context updates
+  const resetUserSettingsAndTheme = () => {
+    // Clear existing user-specific settings from localStorage
+    localStorage.removeItem('userSettings');
+    localStorage.removeItem('taskViewMode');
+    
+    // Trigger a custom event to notify other contexts to refresh
+    window.dispatchEvent(new CustomEvent('userLogin', { 
+      detail: { timestamp: Date.now() } 
+    }));
+  };
+
   const login = async (email, password) => {
     try {
       dispatch({ type: 'LOGIN_START' });
@@ -98,8 +110,8 @@ export const AuthProvider = ({ children }) => {
       
       toast.success(`Welcome back, ${user.name}!`);
       
-      // Reload page to ensure all settings are properly fetched
-      window.location.reload();
+      // Reset user settings and trigger context updates instead of reloading
+      resetUserSettingsAndTheme();
       
       return { success: true };
     } catch (error) {

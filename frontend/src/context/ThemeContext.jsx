@@ -32,6 +32,34 @@ export const ThemeProvider = ({ children }) => {
     localStorage.setItem('theme', JSON.stringify(isDark));
   }, [isDark]);
 
+  // Listen for custom userLogin event to refresh theme from server
+  useEffect(() => {
+    const handleUserLogin = () => {
+      // Theme will be updated by SettingsContext when it loads user settings
+      // We just need to make sure we're listening to the settings changes
+      const checkForSettings = () => {
+        const userSettings = localStorage.getItem('userSettings');
+        if (userSettings) {
+          try {
+            const settings = JSON.parse(userSettings);
+            if (settings.theme) {
+              setIsDark(settings.theme === 'dark');
+            }
+          } catch (error) {
+            console.error('Error parsing user settings:', error);
+          }
+        }
+      };
+
+      // Check immediately and also after a short delay to allow SettingsContext to load
+      checkForSettings();
+      setTimeout(checkForSettings, 100);
+    };
+
+    window.addEventListener('userLogin', handleUserLogin);
+    return () => window.removeEventListener('userLogin', handleUserLogin);
+  }, []);
+
   const toggleTheme = () => {
     setIsDark(!isDark);
   };

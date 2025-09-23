@@ -51,6 +51,17 @@ export const SettingsProvider = ({ children }) => {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
+  // Listen for custom userLogin event to reload settings
+  useEffect(() => {
+    const handleUserLogin = () => {
+      // User logged in, reload settings from server
+      loadUserSettings();
+    };
+
+    window.addEventListener('userLogin', handleUserLogin);
+    return () => window.removeEventListener('userLogin', handleUserLogin);
+  }, []);
+
   // Apply theme to document
   useEffect(() => {
     const root = window.document.documentElement;

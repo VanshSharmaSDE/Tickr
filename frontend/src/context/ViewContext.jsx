@@ -22,6 +22,17 @@ export const ViewProvider = ({ children }) => {
     localStorage.setItem('taskViewMode', viewMode);
   }, [viewMode]);
 
+  // Listen for custom userLogin event to reset view mode
+  useEffect(() => {
+    const handleUserLogin = () => {
+      // Reset to default view mode when user logs in
+      setViewMode('card');
+    };
+
+    window.addEventListener('userLogin', handleUserLogin);
+    return () => window.removeEventListener('userLogin', handleUserLogin);
+  }, []);
+
   const toggleViewMode = () => {
     setViewMode(prev => prev === 'card' ? 'list' : 'card');
   };
