@@ -59,7 +59,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      // Verify token and get user profile
+      // Verify token and get user profile (silent verification, no events)
       authService.getProfile()
         .then(response => {
           dispatch({
@@ -69,8 +69,12 @@ export const AuthProvider = ({ children }) => {
               token: token,
             },
           });
+          // Note: We don't call resetUserSettingsAndTheme() here to avoid infinite loops
+          // This is just for initial app load verification, not actual login
         })
-        .catch(() => {
+        .catch((error) => {
+          console.warn('Token verification failed:', error.response?.data?.message || error.message);
+          // Clear invalid token
           localStorage.removeItem('token');
           dispatch({ type: 'LOGOUT' });
         })
@@ -78,6 +82,7 @@ export const AuthProvider = ({ children }) => {
           dispatch({ type: 'SET_LOADING', payload: false });
         });
     } else {
+      // No token found, set loading to false immediately
       dispatch({ type: 'SET_LOADING', payload: false });
     }
   }, []);
@@ -110,7 +115,8 @@ export const AuthProvider = ({ children }) => {
       
       toast.success(`Welcome back, ${user.name}!`);
       
-      // Reset user settings and trigger context updates instead of reloading
+      // Only reset user settings and trigger context updates when actually logging in
+      // Not during initial token verification
       resetUserSettingsAndTheme();
       
       return { success: true };

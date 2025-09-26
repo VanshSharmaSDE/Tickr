@@ -28,17 +28,20 @@ function AppContent() {
   const location = useLocation();
 
   useEffect(() => {
-    if (!user) return;
+    // Only handle focus mode navigation if user is authenticated and not loading
+    if (!user || loading) return;
 
+    // Prevent unnecessary redirects by checking current path
     if (isInFocusMode && location.pathname !== '/focus-mode') {
+      console.log('Redirecting to focus mode...');
       navigate('/focus-mode', { replace: true });
-    }
-
-    if (!isInFocusMode && location.pathname === '/focus-mode') {
+    } else if (!isInFocusMode && location.pathname === '/focus-mode') {
+      console.log('Redirecting from focus mode to dashboard...');
       navigate('/dashboard', { replace: true });
     }
-  }, [user, isInFocusMode, location.pathname, navigate]);
+  }, [user, loading, isInFocusMode, location.pathname, navigate]);
 
+  // Show loading screen while authentication is being checked
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
@@ -52,24 +55,24 @@ function AppContent() {
       {user && !isInFocusMode && <Navbar />}
       
       <Routes>
-        {/* Landing Page - Show to non-authenticated users */}
+        {/* Landing Page - Show to non-authenticated users, handle loading state */}
         <Route 
           path="/" 
-          element={user ? <Navigate to="/dashboard" /> : <LandingPage />} 
+          element={loading ? null : (user ? <Navigate to="/dashboard" /> : <LandingPage />)} 
         />
         
-        {/* Public Routes */}
+        {/* Public Routes - Handle loading state */}
         <Route 
           path="/login" 
-          element={user ? <Navigate to="/dashboard" /> : <Login />} 
+          element={loading ? null : (user ? <Navigate to="/dashboard" /> : <Login />)} 
         />
         <Route 
           path="/register" 
-          element={user ? <Navigate to="/dashboard" /> : <Register />} 
+          element={loading ? null : (user ? <Navigate to="/dashboard" /> : <Register />)} 
         />
         <Route 
           path="/forgot-password" 
-          element={user ? <Navigate to="/dashboard" /> : <ForgotPassword />} 
+          element={loading ? null : (user ? <Navigate to="/dashboard" /> : <ForgotPassword />)} 
         />
         
         {/* Contact Page - Public route */}

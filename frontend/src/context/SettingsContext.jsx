@@ -72,13 +72,22 @@ export const SettingsProvider = ({ children }) => {
 
   // Listen for custom userLogin event to reload settings
   useEffect(() => {
+    let timeoutId;
+    
     const handleUserLogin = () => {
-      // User logged in, reload settings from server
-      loadUserSettings();
+      // Debounce the settings reload to prevent rapid successive calls
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        console.log('User login event received, reloading settings...');
+        loadUserSettings();
+      }, 100);
     };
 
     window.addEventListener('userLogin', handleUserLogin);
-    return () => window.removeEventListener('userLogin', handleUserLogin);
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener('userLogin', handleUserLogin);
+    };
   }, []);
 
   // Apply theme to document
@@ -120,6 +129,12 @@ export const SettingsProvider = ({ children }) => {
   }, [settings.animation]);
 
   const loadUserSettings = async () => {
+    // Prevent multiple simultaneous loads
+    if (loading) {
+      console.log('Settings already loading, skipping...');
+      return;
+    }
+    
     try {
       setLoading(true);
       
@@ -130,7 +145,6 @@ export const SettingsProvider = ({ children }) => {
         const normalizedDefaults = { ...defaultSettings };
         setSettings(normalizedDefaults);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(normalizedDefaults));
-        setLoading(false);
         return;
       }
       

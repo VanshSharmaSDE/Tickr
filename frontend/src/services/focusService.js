@@ -13,7 +13,13 @@ class FocusService {
       console.error('FocusService: Failed to get focus mode:', error);
       console.error('FocusService: Error response:', error.response?.data);
       console.error('FocusService: Error status:', error.response?.status);
-      throw error;
+      
+      // Return safe defaults instead of throwing error to prevent app crashes
+      return {
+        isEnabled: false,
+        tasks: [],
+        totalTasks: 0
+      };
     }
   }
 

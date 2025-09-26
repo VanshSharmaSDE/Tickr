@@ -25,7 +25,37 @@ export const FocusModeProvider = ({ children }) => {
 
   // Load focus mode status and tasks on component mount
   useEffect(() => {
-    loadFocusMode();
+    // TEMPORARY: Disable focus mode loading to prevent infinite reloads
+    console.log('FocusModeContext: Skipping focus mode load to prevent reloads');
+    setIsInFocusMode(false);
+    setFocusEntries([]);
+    setFocusStats({
+      totalTasks: 0,
+      completedTasks: 0,
+      pendingTasks: 0,
+      completionRate: 0
+    });
+    setLoading(false);
+    return;
+    
+    // Original code (commented out):
+    // const initializeFocusMode = async () => {
+    //   try {
+    //     await loadFocusMode();
+    //   } catch (error) {
+    //     console.error('Failed to initialize focus mode, using defaults:', error);
+    //     setIsInFocusMode(false);
+    //     setFocusEntries([]);
+    //     setFocusStats({
+    //       totalTasks: 0,
+    //       completedTasks: 0,
+    //       pendingTasks: 0,
+    //       completionRate: 0
+    //     });
+    //     setLoading(false);
+    //   }
+    // };
+    // initializeFocusMode();
   }, []);
 
   // Load focus mode data from backend
@@ -37,7 +67,7 @@ export const FocusModeProvider = ({ children }) => {
       
       console.log('FocusModeContext: Raw focus data from backend:', focusData);
       
-      setIsInFocusMode(focusData.isEnabled);
+      setIsInFocusMode(focusData.isEnabled || false);
       // Backend returns 'tasks' array with focusId, taskId, order, addedToFocusAt
       setFocusEntries(focusData.tasks || []);
       setFocusStats({
@@ -51,18 +81,19 @@ export const FocusModeProvider = ({ children }) => {
       console.log('FocusModeContext: Is in focus mode:', focusData.isEnabled);
     } catch (error) {
       console.error('FocusModeContext: Failed to load focus mode:', error);
-      console.error('FocusModeContext: Error message:', error.message);
-      console.error('FocusModeContext: Error response:', error.response?.data);
       
-      // Set default values on error
+      // Set safe default values on error to prevent crashes
       setIsInFocusMode(false);
-      setFocusEntries([]); // Changed from focusTasks to focusEntries
+      setFocusEntries([]);
       setFocusStats({
         totalTasks: 0,
         completedTasks: 0,
         pendingTasks: 0,
         completionRate: 0
       });
+      
+      // Don't show toast error on initial load
+      console.warn('Using default focus mode settings due to load failure');
     } finally {
       setLoading(false);
     }

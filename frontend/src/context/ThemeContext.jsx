@@ -35,9 +35,8 @@ export const ThemeProvider = ({ children }) => {
   // Listen for custom userLogin event to refresh theme from server
   useEffect(() => {
     const handleUserLogin = () => {
-      // Theme will be updated by SettingsContext when it loads user settings
-      // We just need to make sure we're listening to the settings changes
-      const checkForSettings = () => {
+      // Simply wait for SettingsContext to update localStorage, then sync once
+      setTimeout(() => {
         const userSettings = localStorage.getItem('userSettings');
         if (userSettings) {
           try {
@@ -49,11 +48,7 @@ export const ThemeProvider = ({ children }) => {
             console.error('Error parsing user settings:', error);
           }
         }
-      };
-
-      // Check immediately and also after a short delay to allow SettingsContext to load
-      checkForSettings();
-      setTimeout(checkForSettings, 100);
+      }, 200); // Give SettingsContext time to update localStorage
     };
 
     window.addEventListener('userLogin', handleUserLogin);

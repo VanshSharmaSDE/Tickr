@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FiMail, FiLock, FiEye, FiEyeOff, FiUser } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
@@ -22,6 +22,10 @@ const Register = () => {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false); // Success message state
   const { registerSendOTP, registerVerifyOTP, resendVerificationOTP } = useAuth(); // Removed global loading
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Get the intended destination from location state, default to dashboard
+  const from = location.state?.from?.pathname || '/dashboard';
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -98,7 +102,8 @@ const Register = () => {
   const handleOTPVerify = async (otp) => {
     const result = await registerVerifyOTP(formData.email, otp);
     if (result.success) {
-      navigate('/dashboard');
+      // Navigate to the intended destination or dashboard
+      navigate(from, { replace: true });
     }
   };
 
