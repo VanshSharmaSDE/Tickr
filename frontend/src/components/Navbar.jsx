@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
+import DeleteAccountModal from './DeleteAccountModal';
 import { 
   FiHome, 
   FiClipboard, 
@@ -19,12 +20,13 @@ import {
   FiZapOff,
   FiEdit2,
   FiCheck,
-  FiXCircle
+  FiXCircle,
+  FiTrash2
 } from 'react-icons/fi';
 import { useState, useEffect, useRef } from 'react';
 
 const Navbar = () => {
-  const { user, logout, updateName } = useAuth();
+  const { user, logout, updateName, deleteAccount } = useAuth();
   const { isDark, toggleTheme, isCardView, toggleViewMode, animationsEnabled, toggleAnimations, syncing } = useSettings();
   const location = useLocation();
   const navigate = useNavigate();
@@ -33,6 +35,8 @@ const Navbar = () => {
   const [isEditingName, setIsEditingName] = useState(false);
   const [newName, setNewName] = useState('');
   const [isUpdatingName, setIsUpdatingName] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const settingsRef = useRef(null);
   const nameInputRef = useRef(null);
 
@@ -97,6 +101,17 @@ const Navbar = () => {
     }
   };
 
+  const handleDeleteAccount = async (password) => {
+    setIsDeletingAccount(true);
+    const result = await deleteAccount(password);
+    setIsDeletingAccount(false);
+    
+    if (result.success) {
+      setIsDeleteModalOpen(false);
+      navigate('/login');
+    }
+  };
+
   const isActive = (path) => {
     return location.pathname === path;
   };
@@ -107,7 +122,8 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+    <>
+      <nav className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           {/* Logo and brand */}
@@ -258,6 +274,18 @@ const Navbar = () => {
 
                   <div className="border-t border-gray-200 dark:border-gray-700 my-2"></div>
 
+                  {/* Delete Account */}
+                  <button
+                    onClick={() => {
+                      setIsDeleteModalOpen(true);
+                      setIsSettingsOpen(false);
+                    }}
+                    className="flex items-center space-x-3 px-4 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/20 w-full text-left transition-colors"
+                  >
+                    <FiTrash2 className="w-4 h-4" />
+                    <span>Delete Account</span>
+                  </button>
+
                   {/* Logout */}
                   <button
                     onClick={() => {
@@ -362,6 +390,18 @@ const Navbar = () => {
                   {isDark ? <FiSun className="w-4 h-4" /> : <FiMoon className="w-4 h-4" />}
                   <span>{isDark ? 'Light Mode' : 'Dark Mode'}</span>
                 </button>
+
+                {/* Delete Account in mobile */}
+                <button
+                  onClick={() => {
+                    setIsDeleteModalOpen(true);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/20 transition-colors w-full text-left"
+                >
+                  <FiTrash2 className="w-4 h-4" />
+                  <span>Delete Account</span>
+                </button>
                 
                 {/* Logout in mobile */}
                 <button
@@ -380,6 +420,15 @@ const Navbar = () => {
         )}
       </div>
     </nav>
+
+      {/* Delete Account Modal */}
+      <DeleteAccountModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDeleteAccount}
+        isLoading={isDeletingAccount}
+      />
+    </>
   );
 };
 

@@ -7,6 +7,7 @@ const {
   login,
   getProfile,
   updateUserName,
+  deleteAccount,
   forgotPasswordSendOTP,
   forgotPasswordVerifyOTP,
   resendPasswordResetOTP,
@@ -34,6 +35,9 @@ router.get('/profile', auth, getProfile);
 
 // Update user name
 router.put('/update-name', auth, updateUserName);
+
+// Delete account
+router.delete('/delete-account', auth, deleteAccount);
 
 // Password reset with OTP
 router.post('/forgot-password/send-otp', forgotPasswordSendOTP);

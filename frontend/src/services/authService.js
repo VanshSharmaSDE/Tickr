@@ -90,4 +90,11 @@ export const authService = {
       name,
     });
   },
+
+  // Delete user account
+  deleteAccount: (password) => {
+    return api.delete('/auth/delete-account', {
+      data: { password },
+    });
+  },
 };

@@ -398,6 +398,71 @@ const updateUserName = async (req, res) => {
   }
 };
 
+// Delete user account permanently
+const deleteAccount = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { password } = req.body;
+
+    // Validate input
+    if (!password) {
+      return res.status(400).json({ message: 'Password is required to delete account' });
+    }
+
+    // Get user with password
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Verify password
+    const isPasswordValid = await user.matchPassword(password);
+    if (!isPasswordValid) {
+      return res.status(400).json({ message: 'Invalid password' });
+    }
+
+    // Import models for cleanup (lazy import to avoid circular dependency issues)
+    const Task = require('../models/Task');
+    const TaskProgress = require('../models/TaskProgress');
+
+    try {
+      // Delete all user's task progress
+      await TaskProgress.deleteMany({ user: userId });
+      console.log(`Deleted task progress for user: ${userId}`);
+
+      // Delete all user's tasks
+      await Task.deleteMany({ user: userId });
+      console.log(`Deleted tasks for user: ${userId}`);
+
+      // Delete user account
+      await User.findByIdAndDelete(userId);
+      console.log(`Deleted user account: ${userId}`);
+
+      res.json({
+        success: true,
+        message: 'Account deleted successfully. All your data has been permanently removed.'
+      });
+
+    } catch (cleanupError) {
+      console.error('Error during account cleanup:', cleanupError);
+      // If cleanup fails, still try to delete the user
+      await User.findByIdAndDelete(userId);
+      
+      res.json({
+        success: true,
+        message: 'Account deleted successfully. Some data cleanup may be pending.'
+      });
+    }
+
+  } catch (error) {
+    console.error('Delete account error:', error);
+    res.status(500).json({ 
+      message: 'Failed to delete account',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
+  }
+};
+
 module.exports = {
   registerSendOTP,
   registerVerifyOTP,
@@ -405,6 +470,7 @@ module.exports = {
   login,
   getProfile,
   updateUserName,
+  deleteAccount,
   forgotPasswordSendOTP,
   forgotPasswordVerifyOTP,
   resendPasswordResetOTP,

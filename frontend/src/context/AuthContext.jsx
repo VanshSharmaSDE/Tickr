@@ -317,6 +317,32 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const deleteAccount = async (password) => {
+    try {
+      dispatch({ type: 'SET_LOADING', payload: true });
+      
+      const response = await authService.deleteAccount(password);
+      
+      // Clear all local data
+      localStorage.removeItem('token');
+      localStorage.removeItem('userSettings');
+      localStorage.removeItem('taskViewMode');
+      localStorage.removeItem('theme');
+      
+      // Update state to logged out
+      dispatch({ type: 'LOGOUT' });
+      
+      toast.success('Account deleted successfully. All your data has been permanently removed.');
+      return { success: true };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to delete account';
+      toast.error(message);
+      return { success: false, message };
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
+  };
+
   const value = {
     user: state.user,
     token: state.token,
@@ -328,6 +354,7 @@ export const AuthProvider = ({ children }) => {
     forgotPassword,
     resetPassword,
     updateName,
+    deleteAccount,
     // OTP methods
     registerSendOTP,
     registerVerifyOTP,
