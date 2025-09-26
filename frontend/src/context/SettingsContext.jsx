@@ -50,14 +50,28 @@ export const SettingsProvider = ({ children }) => {
 
   // Load settings from backend on mount
   useEffect(() => {
-    // TEMPORARY: Disable settings loading to prevent infinite reloads
-    console.log('SettingsContext: Skipping settings load to prevent reloads');
-    setSettings({ ...defaultSettings });
-    setLoading(false);
-    return;
+    const initializeSettings = async () => {
+      try {
+        // Try to load local settings first for immediate theme application
+        const localSettings = localStorage.getItem(STORAGE_KEY);
+        if (localSettings) {
+          const parsed = JSON.parse(localSettings);
+          const normalized = normalizeSettings(parsed);
+          setSettings(normalized);
+          console.log('SettingsContext: Applied local settings immediately', normalized);
+        }
+        
+        // Then try to load from backend if authenticated
+        await loadUserSettings();
+      } catch (error) {
+        console.error('Failed to initialize settings:', error);
+        // Use defaults if everything fails
+        setSettings({ ...defaultSettings });
+        setLoading(false);
+      }
+    };
     
-    // Original code (commented out):
-    // loadUserSettings();
+    initializeSettings();
   }, []);
 
   // Listen for auth state changes to reload settings
@@ -136,11 +150,8 @@ export const SettingsProvider = ({ children }) => {
   }, [settings.animation]);
 
   const loadUserSettings = async () => {
-    // Prevent multiple simultaneous loads
-    if (loading) {
-      console.log('Settings already loading, skipping...');
-      return;
-    }
+    // Prevent multiple simultaneous loads - but don't check loading state initially
+    const currentLoading = loading;
     
     try {
       setLoading(true);
@@ -148,12 +159,31 @@ export const SettingsProvider = ({ children }) => {
       // Check if user is authenticated
       const token = localStorage.getItem('token');
       if (!token) {
-        // User not authenticated, use defaults
+        // User not authenticated, load from localStorage or use defaults
+        console.log('SettingsContext: No auth token, loading local settings');
+        const localSettings = localStorage.getItem(STORAGE_KEY);
+        if (localSettings) {
+          try {
+            const parsed = JSON.parse(localSettings);
+            const normalized = normalizeSettings(parsed);
+            setSettings(normalized);
+            console.log('SettingsContext: Loaded local settings:', normalized);
+            return;
+          } catch (parseError) {
+            console.error('Failed to parse local settings:', parseError);
+            localStorage.removeItem(STORAGE_KEY);
+          }
+        }
+        
+        // Use defaults if no local settings
         const normalizedDefaults = { ...defaultSettings };
         setSettings(normalizedDefaults);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(normalizedDefaults));
         return;
       }
+      
+      // User is authenticated, try to load from backend
+      console.log('SettingsContext: User authenticated, loading from backend');
       
       // Try to get from localStorage first for instant UI update
       const localSettings = localStorage.getItem(STORAGE_KEY);
@@ -162,6 +192,7 @@ export const SettingsProvider = ({ children }) => {
           const parsed = JSON.parse(localSettings);
           const normalizedLocal = normalizeSettings(parsed);
           setSettings(normalizedLocal);
+          console.log('SettingsContext: Applied local settings first:', normalizedLocal);
         } catch (parseError) {
           console.error('Failed to parse local settings:', parseError);
           localStorage.removeItem(STORAGE_KEY);
@@ -173,12 +204,13 @@ export const SettingsProvider = ({ children }) => {
       const normalizedBackend = normalizeSettings(backendSettings);
 
       setSettings(normalizedBackend);
+      console.log('SettingsContext: Loaded backend settings:', normalizedBackend);
 
       // Update localStorage with latest backend data
       localStorage.setItem(STORAGE_KEY, JSON.stringify(normalizedBackend));
       
     } catch (error) {
-      console.error('Failed to load settings:', error);
+      console.error('SettingsContext: Failed to load settings from backend:', error);
       // Keep using localStorage settings if backend fails
       const localSettings = localStorage.getItem(STORAGE_KEY);
       if (localSettings) {
@@ -186,6 +218,7 @@ export const SettingsProvider = ({ children }) => {
           const parsed = JSON.parse(localSettings);
           const normalizedLocal = normalizeSettings(parsed);
           setSettings(normalizedLocal);
+          console.log('SettingsContext: Fallback to local settings due to backend error');
         } catch (parseError) {
           console.error('Failed to parse local settings:', parseError);
           localStorage.removeItem(STORAGE_KEY);
@@ -193,6 +226,7 @@ export const SettingsProvider = ({ children }) => {
         }
       } else {
         // No local settings, use defaults
+        console.log('SettingsContext: Using default settings due to errors');
         setSettings({ ...defaultSettings });
       }
       // Don't show error toast on initial load failure
