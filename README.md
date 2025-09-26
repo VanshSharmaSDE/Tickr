@@ -19,13 +19,19 @@ A modern, full-stack task management application built with React and Node.js. T
 
 ## ✨ Features
 
-- **User Authentication**: Registration, login, logout, and password reset
-- **Task Management**: Create, read, update, and delete tasks
+- **User Authentication**: Registration, login, logout, and password reset with email verification
+- **Task Management**: Create, read, update, and delete tasks with priority levels
 - **Priority Levels**: Organize tasks by low, medium, and high priority
 - **Progress Tracking**: Monitor task completion and progress over time
 - **Analytics Dashboard**: View task statistics and productivity insights
+- **User Settings**: Customizable preferences including theme, view modes, and notifications
+- **Landing Page**: Professional landing page with feature showcase
 - **Responsive Design**: Works seamlessly on desktop and mobile devices
 - **Dark/Light Theme**: Toggle between themes for better user experience
+- **Task View Modes**: Switch between list and card view modes
+- **Email Notifications**: Email verification and password reset functionality
+- **Auto-Ping System**: Server auto-ping to keep deployment active (for hosting services)
+- **Contact & Contribution**: Contact page and contribution guide for open-source collaboration
 - **Real-time Updates**: Dynamic UI updates without page refresh
 
 ## 🛠 Tech Stack
@@ -52,6 +58,9 @@ A modern, full-stack task management application built with React and Node.js. T
 - **Nodemailer** - Email sending functionality
 - **CORS** - Cross-origin resource sharing
 - **Validator** - Input validation
+- **Crypto-js** - Cryptographic utilities
+- **Axios** - HTTP client for server-side requests
+- **Dotenv** - Environment variable management
 
 ## 📁 Project Structure
 
@@ -63,17 +72,24 @@ Tickr/
 │   ├── controllers/        # Route handlers
 │   │   ├── analyticsController.js
 │   │   ├── authController.js
+│   │   ├── settingsController.js
 │   │   └── tasksController.js
 │   ├── middleware/
 │   │   └── auth.js         # Authentication middleware
 │   ├── models/             # Mongoose schemas
+│   │   ├── Settings.js
 │   │   ├── Task.js
 │   │   ├── TaskProgress.js
 │   │   └── User.js
 │   ├── routes/             # API routes
 │   │   ├── analytics.js
 │   │   ├── auth.js
+│   │   ├── settings.js
 │   │   └── tasks.js
+│   ├── utils/              # Utility functions
+│   │   └── emailService.js # Email service utilities
+│   ├── .env               # Environment variables
+│   ├── .gitignore         # Git ignore rules
 │   ├── package.json
 │   └── server.js           # Main server file
 │
@@ -91,14 +107,19 @@ Tickr/
 │   │   │   └── useTasks.js
 │   │   ├── pages/          # Page components
 │   │   │   ├── Analytics.jsx
+│   │   │   ├── Contact.jsx
+│   │   │   ├── ContributionGuide.jsx
 │   │   │   ├── Dashboard.jsx
 │   │   │   ├── ForgotPassword.jsx
+│   │   │   ├── LandingPage.jsx
 │   │   │   ├── Login.jsx
+│   │   │   ├── NotFound.jsx
 │   │   │   └── Register.jsx
 │   │   ├── services/       # API service functions
 │   │   │   ├── analyticsService.js
 │   │   │   ├── api.js
 │   │   │   ├── authService.js
+│   │   │   ├── settingsService.js
 │   │   │   └── taskService.js
 │   │   ├── utils/          # Utility functions
 │   │   │   ├── dateUtils.js
@@ -168,11 +189,11 @@ Before you begin, ensure you have the following installed:
    NODE_ENV=development
    BACKEND_URL=http://localhost:5000
 
-   # Email (for password reset - optional)
-   EMAIL_HOST=smtp.gmail.com
-   EMAIL_PORT=587
-   EMAIL_USER=your-email@gmail.com
-   EMAIL_PASS=your-email-password
+   # Email Configuration (for verification and password reset)
+   SMTP_HOST=smtp.gmail.com
+   SMTP_PORT=587
+   SMTP_EMAIL=your-email@gmail.com
+   SMTP_PASSWORD=your-email-app-password
    EMAIL_FROM=noreply@tickr.com
    ```
 
@@ -233,6 +254,7 @@ Before you begin, ensure you have the following installed:
 | POST | `/api/auth/logout` | Logout user |
 | POST | `/api/auth/forgot-password` | Send password reset email |
 | POST | `/api/auth/reset-password` | Reset password with token |
+| POST | `/api/auth/verify-email` | Verify email with OTP |
 | GET | `/api/auth/me` | Get current user profile |
 
 ### Task Endpoints
@@ -253,6 +275,15 @@ Before you begin, ensure you have the following installed:
 | GET | `/api/analytics/stats` | Get user task statistics |
 | GET | `/api/analytics/progress` | Get progress data |
 | GET | `/api/analytics/trends` | Get task completion trends |
+
+### Settings Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/settings` | Get user settings |
+| PUT | `/api/settings` | Update user settings |
+| PATCH | `/api/settings/update` | Update specific setting |
+| POST | `/api/settings/reset` | Reset settings to default |
 
 ## 🎨 Customization Guide
 
@@ -289,6 +320,23 @@ Before you begin, ensure you have the following installed:
    - Create component in `frontend/src/pages/`
    - Add route in `frontend/src/App.jsx`
    - Create corresponding service functions
+   - Update navigation in `Navbar.jsx` if needed
+
+### Settings System
+
+The application includes a comprehensive settings system:
+
+1. **Theme Management**: Users can switch between light and dark themes
+2. **View Modes**: Toggle between list and card view for tasks
+3. **Notifications**: Enable/disable notification preferences
+4. **Language**: Support for multiple languages (extensible)
+5. **Animations**: Control UI animations for better accessibility
+
+To extend settings:
+1. Add new fields to `Settings.js` model
+2. Update `settingsController.js` validation
+3. Modify `settingsService.js` for frontend integration
+4. Add UI controls in settings component
 
 ### Database Schema Modifications
 
@@ -298,10 +346,26 @@ Before you begin, ensure you have the following installed:
 
 ### Email Configuration
 
-To enable password reset functionality:
-1. Configure email settings in backend `.env`
-2. Update email templates in controllers
-3. Test email functionality
+The application includes email verification and password reset functionality:
+
+1. **Email Verification**: New users receive OTP via email for account verification
+2. **Password Reset**: Users can reset passwords through secure email links
+3. **Custom Templates**: HTML email templates for professional communication
+
+To configure email services:
+1. Set up SMTP credentials in backend `.env`
+2. Configure email templates in `utils/emailService.js`
+3. Test email functionality in development
+4. Consider using services like SendGrid, Mailgun for production
+
+### Deployment Features
+
+The application includes production-ready features:
+
+1. **Auto-Ping System**: Prevents server hibernation on free hosting services
+2. **Environment Configuration**: Separate dev/prod configurations
+3. **Error Handling**: Comprehensive error handling and logging
+4. **CORS Setup**: Properly configured cross-origin requests
 
 ## 🗄️ Database Schema
 
@@ -343,6 +407,20 @@ To enable password reset functionality:
 }
 ```
 
+### Settings Model
+```javascript
+{
+  user: ObjectId (ref: User),
+  theme: String (light/dark),
+  taskViewMode: String (list/card),
+  notifications: Boolean,
+  language: String,
+  animation: Boolean,
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
 ## 🔧 Development Commands
 
 ### Backend Commands
@@ -367,7 +445,12 @@ npm run preview    # Preview production build
 - `JWT_EXPIRE` - JWT token expiration time
 - `PORT` - Server port (default: 5000)
 - `NODE_ENV` - Environment (development/production)
-- `EMAIL_*` - Email configuration for notifications
+- `BACKEND_URL` - Backend URL for auto-ping functionality
+- `SMTP_HOST` - SMTP server host for email services
+- `SMTP_PORT` - SMTP server port
+- `SMTP_EMAIL` - Email address for sending emails
+- `SMTP_PASSWORD` - Email password or app password
+- `EMAIL_FROM` - From email address for notifications
 
 ### Frontend (.env)
 - `VITE_API_URL` - Backend API URL
@@ -398,13 +481,26 @@ This project is licensed under the ISC License - see the LICENSE file for detail
    - Verify frontend URL in backend CORS configuration
    - Check API_URL in frontend .env
 
-3. **Build Errors:**
+3. **Email Verification Issues:**
+   - Verify SMTP credentials in .env file
+   - Check email service provider settings
+   - Ensure app passwords are used for Gmail
+   - Test email connectivity
+
+4. **Settings Not Saving:**
+   - Check authentication middleware
+   - Verify settings model validation
+   - Ensure proper API endpoint calls
+
+5. **Build Errors:**
    - Clear node_modules and reinstall dependencies
    - Check Node.js version compatibility
+   - Verify all environment variables are set
 
-4. **Authentication Issues:**
+6. **Authentication Issues:**
    - Verify JWT_SECRET configuration
    - Check token expiration settings
+   - Ensure proper middleware implementation
 
 ### Getting Help
 
@@ -414,4 +510,4 @@ This project is licensed under the ISC License - see the LICENSE file for detail
 
 ---
 
-Built with ❤️ using React and Node.js
+Built with ❤️ using MERN
