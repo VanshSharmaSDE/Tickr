@@ -40,6 +40,16 @@ class SettingsService {
       throw error;
     }
   }
+
+  async toggleFocusMode() {
+    try {
+      const response = await api.post('/settings/toggle-focus');
+      return response.data;
+    } catch (error) {
+      console.error('Failed to toggle focus mode:', error);
+      throw error;
+    }
+  }
 }
 
 export const settingsService = new SettingsService();

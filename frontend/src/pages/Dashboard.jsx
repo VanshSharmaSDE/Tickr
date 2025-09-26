@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { 
@@ -18,8 +19,10 @@ import {
 import { useTasks } from '../hooks/useTasks';
 import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
+import { useFocusMode } from '../context/FocusModeContext';
 import { formatDate } from '../utils/dateUtils';
 import { taskService } from '../services/taskService';
+import FocusModeModal from '../components/FocusModeModal';
 
 // Text truncation utility
 const truncateText = (text, maxLength) => {
@@ -183,8 +186,17 @@ const TaskDetailModal = ({ task, isOpen, onClose, isCompleted }) => {
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const { isCardView, isListView, loading: settingsLoading, animationsEnabled } = useSettings();
+  const { 
+    isCardView, 
+    isListView, 
+    loading: settingsLoading, 
+    animationsEnabled,
+    focusMode,
+    toggleFocusMode
+  } = useSettings();
+  const { isInFocusMode, startFocusMode } = useFocusMode();
   const { tasks, loading, createTask, deleteTask, updateTask, toggleTask } = useTasks();
+  const navigate = useNavigate();
   
   // Helper function to conditionally apply animation props
   const getAnimationProps = (animationConfig = {}) => {
@@ -200,7 +212,25 @@ const Dashboard = () => {
   const [taskToView, setTaskToView] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState(null);
+  const [isFocusModalOpen, setIsFocusModalOpen] = useState(false);
   const [todayProgress, setTodayProgress] = useState([]);
+
+  // Handler to open focus modal from navbar
+  const handleOpenFocusModal = () => {
+    setIsFocusModalOpen(true);
+  };
+
+  // Listen for focus modal open event from navbar
+  useEffect(() => {
+    const handleOpenFocusModalEvent = () => {
+      setIsFocusModalOpen(true);
+    };
+
+    window.addEventListener('openFocusModal', handleOpenFocusModalEvent);
+    return () => {
+      window.removeEventListener('openFocusModal', handleOpenFocusModalEvent);
+    };
+  }, []);
 
   // Calculate today's stats
   const todayStats = React.useMemo(() => {
@@ -231,6 +261,23 @@ const Dashboard = () => {
 
     fetchTodayProgress();
   }, [tasks]);
+
+  const handleFocusStart = async (selectedTasks) => {
+    try {
+      // Start focus mode with selected tasks (this will handle backend sync)
+      await startFocusMode(selectedTasks);
+      setIsFocusModalOpen(false);
+      navigate('/focus-mode');
+    } catch (error) {
+      console.error('Failed to start focus mode:', error);
+      toast.error('Failed to start focus mode. Please try again.');
+      setIsFocusModalOpen(false);
+    }
+  };
+
+  const handleFocusCancel = async () => {
+    setIsFocusModalOpen(false);
+  };
 
   const handleTaskToggle = async (taskId) => {
     try {
@@ -639,6 +686,17 @@ const Dashboard = () => {
             </motion.div>
           )}
         </motion.div>
+
+        {/* Focus Mode Modal */}
+        <AnimatePresence>
+          {isFocusModalOpen && (
+            <FocusModeModal
+              isOpen={isFocusModalOpen}
+              onClose={handleFocusCancel}
+              onStartFocus={handleFocusStart}
+            />
+          )}
+        </AnimatePresence>
 
         {/* Create Task Modal */}
         <AnimatePresence>

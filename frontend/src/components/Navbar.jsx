@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
+import { useFocusMode } from '../context/FocusModeContext';
 import DeleteAccountModal from './DeleteAccountModal';
 import { 
   FiHome, 
@@ -21,13 +22,16 @@ import {
   FiEdit2,
   FiCheck,
   FiXCircle,
-  FiTrash2
+  FiTrash2,
+  FiEye,
+  FiEyeOff
 } from 'react-icons/fi';
 import { useState, useEffect, useRef } from 'react';
 
 const Navbar = () => {
   const { user, logout, updateName, deleteAccount } = useAuth();
-  const { isDark, toggleTheme, isCardView, toggleViewMode, animationsEnabled, toggleAnimations, syncing } = useSettings();
+  const { isDark, toggleTheme, isCardView, toggleViewMode, animationsEnabled, toggleAnimations, focusMode, toggleFocusMode, syncing } = useSettings();
+  const { isInFocusMode, exitFocusMode } = useFocusMode();
   const location = useLocation();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -244,6 +248,24 @@ const Navbar = () => {
                         {isCardView ? <FiList className="w-4 h-4" /> : <FiGrid className="w-4 h-4" />}
                         <span>{isCardView ? 'List View' : 'Card View'}</span>
                       </button>
+                      
+                      {/* Focus Mode toggle */}
+                      <button
+                        onClick={() => {
+                          // Navigate to dashboard if not already there
+                          if (location.pathname !== '/dashboard') {
+                            navigate('/dashboard');
+                          }
+                          // Use a custom event to trigger focus modal
+                          window.dispatchEvent(new CustomEvent('openFocusModal'));
+                          setIsSettingsOpen(false);
+                        }}
+                        className="flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 w-full text-left transition-colors"
+                      >
+                        <FiZap className="w-4 h-4" />
+                        <span>Focus Mode</span>
+                      </button>
+                      
                       <div className="border-t border-gray-200 dark:border-gray-700 my-2"></div>
                     </>
                   )}

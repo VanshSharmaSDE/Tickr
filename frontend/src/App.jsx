@@ -1,7 +1,9 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { SettingsProvider } from './context/SettingsContext';
+import { FocusModeProvider, useFocusMode } from './context/FocusModeContext';
 
 // Pages
 import Login from './pages/Login';
@@ -17,9 +19,25 @@ import NotFound from './pages/NotFound';
 // Components
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
+import FocusModePage from './components/FocusModePage';
 
 function AppContent() {
   const { user, loading } = useAuth();
+  const { isInFocusMode, exitFocusMode } = useFocusMode();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!user) return;
+
+    if (isInFocusMode && location.pathname !== '/focus-mode') {
+      navigate('/focus-mode', { replace: true });
+    }
+
+    if (!isInFocusMode && location.pathname === '/focus-mode') {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, isInFocusMode, location.pathname, navigate]);
 
   if (loading) {
     return (
@@ -31,7 +49,7 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
-      {user && <Navbar />}
+      {user && !isInFocusMode && <Navbar />}
       
       <Routes>
         {/* Landing Page - Show to non-authenticated users */}
@@ -70,6 +88,16 @@ function AppContent() {
         <Route path="/dashboard" element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        } />
+
+        <Route path="/focus-mode" element={
+          <ProtectedRoute>
+            {isInFocusMode ? (
+              <FocusModePage onExit={exitFocusMode} />
+            ) : (
+              <Navigate to="/dashboard" replace />
+            )}
           </ProtectedRoute>
         } />
         
@@ -121,9 +149,11 @@ function App() {
   return (
     <SettingsProvider>
       <AuthProvider>
-        <Router>
-          <AppContent />
-        </Router>
+        <FocusModeProvider>
+          <Router>
+            <AppContent />
+          </Router>
+        </FocusModeProvider>
       </AuthProvider>
     </SettingsProvider>
   );

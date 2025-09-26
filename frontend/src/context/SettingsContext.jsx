@@ -4,6 +4,37 @@ import toast from 'react-hot-toast';
 
 const SettingsContext = createContext();
 
+const STORAGE_KEY = 'userSettings';
+
+const defaultSettings = {
+  theme: 'light',
+  taskViewMode: 'card',
+  notifications: true,
+  language: 'en',
+  animation: true,
+  focusMode: false
+};
+
+const normalizeSettings = (incoming = {}) => {
+  const focusModeValue =
+    typeof incoming.focusMode === 'boolean'
+      ? incoming.focusMode
+      : typeof incoming.focusmode === 'boolean'
+        ? incoming.focusmode
+        : defaultSettings.focusMode;
+
+  const normalized = {
+    ...defaultSettings,
+    ...incoming,
+    focusMode: focusModeValue
+  };
+
+  delete normalized.focusmode;
+  delete normalized.focus_mode;
+
+  return normalized;
+};
+
 export const useSettings = () => {
   const context = useContext(SettingsContext);
   if (!context) {
@@ -13,13 +44,7 @@ export const useSettings = () => {
 };
 
 export const SettingsProvider = ({ children }) => {
-  const [settings, setSettings] = useState({
-    theme: 'light',
-    taskViewMode: 'card',
-    notifications: true,
-    language: 'en',
-    animation: true
-  });
+  const [settings, setSettings] = useState({ ...defaultSettings });
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
 
@@ -36,14 +61,8 @@ export const SettingsProvider = ({ children }) => {
         loadUserSettings();
       } else if (e.key === 'token' && !e.newValue) {
         // User logged out, reset to defaults
-        setSettings({
-          theme: 'light',
-          taskViewMode: 'card',
-          notifications: true,
-          language: 'en',
-          animation: true
-        });
-        localStorage.removeItem('userSettings');
+        setSettings({ ...defaultSettings });
+        localStorage.removeItem(STORAGE_KEY);
       }
     };
 
@@ -108,89 +127,52 @@ export const SettingsProvider = ({ children }) => {
       const token = localStorage.getItem('token');
       if (!token) {
         // User not authenticated, use defaults
-        const defaultSettings = {
-          theme: 'light',
-          taskViewMode: 'card',
-          notifications: true,
-          language: 'en',
-          animation: true
-        };
-        setSettings(defaultSettings);
+        const normalizedDefaults = { ...defaultSettings };
+        setSettings(normalizedDefaults);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(normalizedDefaults));
         setLoading(false);
         return;
       }
       
       // Try to get from localStorage first for instant UI update
-      const localSettings = localStorage.getItem('userSettings');
+      const localSettings = localStorage.getItem(STORAGE_KEY);
       if (localSettings) {
-        const parsed = JSON.parse(localSettings);
-        // Ensure all required fields exist (migration for existing users)
-        const migratedSettings = {
-          theme: 'light',
-          taskViewMode: 'card',
-          notifications: true,
-          language: 'en',
-          animation: true,
-          ...parsed // Override with existing saved values
-        };
-        setSettings(migratedSettings);
+        try {
+          const parsed = JSON.parse(localSettings);
+          const normalizedLocal = normalizeSettings(parsed);
+          setSettings(normalizedLocal);
+        } catch (parseError) {
+          console.error('Failed to parse local settings:', parseError);
+          localStorage.removeItem(STORAGE_KEY);
+        }
       }
 
       // Then fetch from backend to ensure sync
       const backendSettings = await settingsService.getUserSettings();
-      
-      // Ensure backend settings have all required fields
-      const completeBackendSettings = {
-        theme: 'light',
-        taskViewMode: 'card',
-        notifications: true,
-        language: 'en',
-        animation: true,
-        ...backendSettings // Override with backend values
-      };
-      
-      setSettings(completeBackendSettings);
-      
+      const normalizedBackend = normalizeSettings(backendSettings);
+
+      setSettings(normalizedBackend);
+
       // Update localStorage with latest backend data
-      localStorage.setItem('userSettings', JSON.stringify(completeBackendSettings));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(normalizedBackend));
       
     } catch (error) {
       console.error('Failed to load settings:', error);
       // Keep using localStorage settings if backend fails
-      const localSettings = localStorage.getItem('userSettings');
+      const localSettings = localStorage.getItem(STORAGE_KEY);
       if (localSettings) {
         try {
           const parsed = JSON.parse(localSettings);
-          // Ensure all required fields exist
-          const migratedSettings = {
-            theme: 'light',
-            taskViewMode: 'card',
-            notifications: true,
-            language: 'en',
-            animation: true,
-            ...parsed
-          };
-          setSettings(migratedSettings);
+          const normalizedLocal = normalizeSettings(parsed);
+          setSettings(normalizedLocal);
         } catch (parseError) {
           console.error('Failed to parse local settings:', parseError);
-          // Use complete defaults if parsing fails
-          setSettings({
-            theme: 'light',
-            taskViewMode: 'card',
-            notifications: true,
-            language: 'en',
-            animation: true
-          });
+          localStorage.removeItem(STORAGE_KEY);
+          setSettings({ ...defaultSettings });
         }
       } else {
         // No local settings, use defaults
-        setSettings({
-          theme: 'light',
-          taskViewMode: 'card',
-          notifications: true,
-          language: 'en',
-          animation: true
-        });
+        setSettings({ ...defaultSettings });
       }
       // Don't show error toast on initial load failure
     } finally {
@@ -199,11 +181,12 @@ export const SettingsProvider = ({ children }) => {
   };
 
   const updateSetting = async (key, value) => {
+    const previousSettings = { ...settings };
     try {
       // Optimistic update for instant UI response
-      const newSettings = { ...settings, [key]: value };
-      setSettings(newSettings);
-      localStorage.setItem('userSettings', JSON.stringify(newSettings));
+      const optimisticSettings = normalizeSettings({ ...settings, [key]: value });
+      setSettings(optimisticSettings);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(optimisticSettings));
 
       // Show success toast based on setting type
       const settingMessages = {
@@ -227,18 +210,18 @@ export const SettingsProvider = ({ children }) => {
       // Background API call for authenticated users
       setSyncing(true);
       const updatedSettings = await settingsService.updateSpecificSetting(key, value);
-      
+      const normalizedServerSettings = normalizeSettings(updatedSettings);
+
       // Update with server response
-      setSettings(updatedSettings);
-      localStorage.setItem('userSettings', JSON.stringify(updatedSettings));
+      setSettings(normalizedServerSettings);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(normalizedServerSettings));
       
     } catch (error) {
       console.error('Failed to update setting:', error);
       // Revert optimistic update on failure
-      const localSettings = localStorage.getItem('userSettings');
-      if (localSettings) {
-        setSettings(JSON.parse(localSettings));
-      }
+      const normalizedPrevious = normalizeSettings(previousSettings);
+      setSettings(normalizedPrevious);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(normalizedPrevious));
       toast.error('Failed to save setting. Please try again.');
     } finally {
       setSyncing(false);
@@ -246,11 +229,12 @@ export const SettingsProvider = ({ children }) => {
   };
 
   const updateMultipleSettings = async (newSettings) => {
+    const previousSettings = { ...settings };
     try {
       // Optimistic update
-      const updatedSettings = { ...settings, ...newSettings };
-      setSettings(updatedSettings);
-      localStorage.setItem('userSettings', JSON.stringify(updatedSettings));
+      const optimisticSettings = normalizeSettings({ ...settings, ...newSettings });
+      setSettings(optimisticSettings);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(optimisticSettings));
 
       // Show success toast
       const settingCount = Object.keys(newSettings).length;
@@ -267,16 +251,16 @@ export const SettingsProvider = ({ children }) => {
       const serverSettings = await settingsService.updateSettings(newSettings);
       
       // Update with server response
-      setSettings(serverSettings);
-      localStorage.setItem('userSettings', JSON.stringify(serverSettings));
+      const normalizedServerSettings = normalizeSettings(serverSettings);
+      setSettings(normalizedServerSettings);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(normalizedServerSettings));
       
     } catch (error) {
       console.error('Failed to update settings:', error);
       // Revert optimistic update on failure
-      const localSettings = localStorage.getItem('userSettings');
-      if (localSettings) {
-        setSettings(JSON.parse(localSettings));
-      }
+      const normalizedPrevious = normalizeSettings(previousSettings);
+      setSettings(normalizedPrevious);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(normalizedPrevious));
       toast.error('Failed to save settings. Please try again.');
     } finally {
       setSyncing(false);
@@ -286,9 +270,10 @@ export const SettingsProvider = ({ children }) => {
   const resetSettings = async () => {
     try {
       setSyncing(true);
-      const defaultSettings = await settingsService.resetSettings();
-      setSettings(defaultSettings);
-      localStorage.setItem('userSettings', JSON.stringify(defaultSettings));
+      const serverDefaults = await settingsService.resetSettings();
+      const normalizedDefaults = normalizeSettings(serverDefaults);
+      setSettings(normalizedDefaults);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(normalizedDefaults));
       toast.success('Settings reset to default');
     } catch (error) {
       console.error('Failed to reset settings:', error);
@@ -314,6 +299,71 @@ export const SettingsProvider = ({ children }) => {
   const toggleAnimations = () => {
     const newAnimation = !settings.animation;
     updateSetting('animation', newAnimation);
+  };
+
+  // Focus mode methods
+  const toggleFocusMode = async (silent = false) => {
+    const previousSettings = { ...settings };
+    const desiredFocusMode = !settings.focusMode;
+    const optimisticSettings = normalizeSettings({ ...settings, focusMode: desiredFocusMode });
+
+    setSettings(optimisticSettings);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(optimisticSettings));
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      if (!silent) {
+        toast.success(`Focus mode ${desiredFocusMode ? 'enabled' : 'disabled'} (saved locally)`);
+      }
+      return desiredFocusMode;
+    }
+
+    try {
+      setSyncing(true);
+      const response = await settingsService.toggleFocusMode();
+
+      const responseSettings = response?.settings
+        ? normalizeSettings(response.settings)
+        : optimisticSettings;
+
+      const responseFocusMode =
+        typeof response?.focusMode === 'boolean'
+          ? response.focusMode
+          : typeof response?.focusmode === 'boolean'
+            ? response.focusmode
+            : responseSettings.focusMode;
+
+      const finalSettings = {
+        ...responseSettings,
+        focusMode: responseFocusMode
+      };
+
+      setSettings(finalSettings);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(finalSettings));
+
+      if (!silent) {
+        toast.success(response?.message || `Focus mode ${finalSettings.focusMode ? 'enabled' : 'disabled'}`);
+      }
+      return finalSettings.focusMode;
+    } catch (error) {
+      console.error('Failed to toggle focus mode:', error);
+      const normalizedPrevious = normalizeSettings(previousSettings);
+      setSettings(normalizedPrevious);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(normalizedPrevious));
+
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error?.message ||
+        'Failed to toggle focus mode. Please try again.';
+
+      if (!silent) {
+        toast.error(errorMessage);
+      }
+      return previousSettings.focusMode;
+    } finally {
+      setSyncing(false);
+    }
   };
 
   const setCardView = () => {
@@ -352,6 +402,10 @@ export const SettingsProvider = ({ children }) => {
     // Animation methods
     animationsEnabled: settings.animation,
     toggleAnimations,
+    
+    // Focus mode methods
+    focusMode: settings.focusMode,
+    toggleFocusMode,
     
     // Other settings
     notifications: settings.notifications,

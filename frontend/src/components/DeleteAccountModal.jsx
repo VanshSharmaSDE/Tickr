@@ -89,7 +89,7 @@ const DeleteAccountModal = ({ isOpen, onClose, onConfirm, isLoading }) => {
               <div className="flex space-x-3 pt-4">
                 <button
                   onClick={handleClose}
-                  className="flex-1 px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                  className="flex-1 px-4 py-2 btn btn-secondary"
                   disabled={isLoading}
                 >
                   Cancel
@@ -154,7 +154,7 @@ const DeleteAccountModal = ({ isOpen, onClose, onConfirm, isLoading }) => {
               <div className="flex space-x-3 pt-4">
                 <button
                   onClick={() => setStep(1)}
-                  className="flex-1 px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                  className="flex-1 px-4 py-2 btn btn-secondary"
                   disabled={isLoading}
                 >
                   Back
