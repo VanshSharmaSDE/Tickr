@@ -50,7 +50,14 @@ export const SettingsProvider = ({ children }) => {
 
   // Load settings from backend on mount
   useEffect(() => {
-    loadUserSettings();
+    // TEMPORARY: Disable settings loading to prevent infinite reloads
+    console.log('SettingsContext: Skipping settings load to prevent reloads');
+    setSettings({ ...defaultSettings });
+    setLoading(false);
+    return;
+    
+    // Original code (commented out):
+    // loadUserSettings();
   }, []);
 
   // Listen for auth state changes to reload settings
