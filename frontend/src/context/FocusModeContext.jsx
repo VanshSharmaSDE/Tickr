@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { focusService } from '../services/focusService';
+import { useAuth } from './AuthContext';
 
 const FocusModeContext = createContext();
 
@@ -13,6 +14,7 @@ export const useFocusMode = () => {
 };
 
 export const FocusModeProvider = ({ children }) => {
+  const { user, token } = useAuth(); // Get authentication state
   const [isInFocusMode, setIsInFocusMode] = useState(false);
   const [focusEntries, setFocusEntries] = useState([]); // Changed from focusTasks to focusEntries
   const [focusStats, setFocusStats] = useState({
@@ -21,48 +23,52 @@ export const FocusModeProvider = ({ children }) => {
     pendingTasks: 0,
     completionRate: 0
   });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Start with false, only load if authenticated
 
   // Load focus mode status and tasks on component mount
   useEffect(() => {
-    // TEMPORARY: Disable focus mode loading to prevent infinite reloads
-    console.log('FocusModeContext: Skipping focus mode load to prevent reloads');
-    setIsInFocusMode(false);
-    setFocusEntries([]);
-    setFocusStats({
-      totalTasks: 0,
-      completedTasks: 0,
-      pendingTasks: 0,
-      completionRate: 0
-    });
-    setLoading(false);
-    return;
-    
-    // Original code (commented out):
-    // const initializeFocusMode = async () => {
-    //   try {
-    //     await loadFocusMode();
-    //   } catch (error) {
-    //     console.error('Failed to initialize focus mode, using defaults:', error);
-    //     setIsInFocusMode(false);
-    //     setFocusEntries([]);
-    //     setFocusStats({
-    //       totalTasks: 0,
-    //       completedTasks: 0,
-    //       pendingTasks: 0,
-    //       completionRate: 0
-    //     });
-    //     setLoading(false);
-    //   }
-    // };
-    // initializeFocusMode();
-  }, []);
+    const initializeFocusMode = async () => {
+      // Only initialize focus mode if user is authenticated
+      if (!user || !token) {
+        console.log('FocusModeContext: User not authenticated, skipping focus mode initialization');
+        setIsInFocusMode(false);
+        setFocusEntries([]);
+        setFocusStats({
+          totalTasks: 0,
+          completedTasks: 0,
+          pendingTasks: 0,
+          completionRate: 0
+        });
+        setLoading(false);
+        return;
+      }
+
+      try {
+        console.log('FocusModeContext: User authenticated, initializing focus mode...');
+        await loadFocusMode();
+      } catch (error) {
+        console.error('Failed to initialize focus mode, using defaults:', error);
+        setIsInFocusMode(false);
+        setFocusEntries([]);
+        setFocusStats({
+          totalTasks: 0,
+          completedTasks: 0,
+          pendingTasks: 0,
+          completionRate: 0
+        });
+        setLoading(false);
+      }
+    };
+    initializeFocusMode();
+  }, [user, token]); // Depend on user and token changes
 
   // Load focus mode data from backend
   const loadFocusMode = async () => {
     try {
       console.log('FocusModeContext: Starting loadFocusMode...');
       setLoading(true);
+      
+      // Use the focusService which already has error handling built-in
       const focusData = await focusService.getFocusMode();
       
       console.log('FocusModeContext: Raw focus data from backend:', focusData);
@@ -92,7 +98,7 @@ export const FocusModeProvider = ({ children }) => {
         completionRate: 0
       });
       
-      // Don't show toast error on initial load
+      // Don't show toast error on initial load - focusService already handles this
       console.warn('Using default focus mode settings due to load failure');
     } finally {
       setLoading(false);
