@@ -290,6 +290,33 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateName = async (name) => {
+    try {
+      dispatch({ type: 'SET_LOADING', payload: true });
+      
+      const response = await authService.updateName(name);
+      const updatedUser = response.data.user;
+      
+      // Update user in state
+      dispatch({
+        type: 'LOGIN_SUCCESS',
+        payload: { 
+          user: updatedUser, 
+          token: state.token 
+        },
+      });
+      
+      toast.success('Name updated successfully');
+      return { success: true };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to update name';
+      toast.error(message);
+      return { success: false, message };
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
+  };
+
   const value = {
     user: state.user,
     token: state.token,
@@ -300,6 +327,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     forgotPassword,
     resetPassword,
+    updateName,
     // OTP methods
     registerSendOTP,
     registerVerifyOTP,

@@ -83,4 +83,11 @@ export const authService = {
       password,
     });
   },
+
+  // Update user name
+  updateName: (name) => {
+    return api.put('/auth/update-name', {
+      name,
+    });
+  },
 };

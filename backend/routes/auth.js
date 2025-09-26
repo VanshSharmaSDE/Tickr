@@ -6,6 +6,7 @@ const {
   resendVerificationOTP,
   login,
   getProfile,
+  updateUserName,
   forgotPasswordSendOTP,
   forgotPasswordVerifyOTP,
   resendPasswordResetOTP,
@@ -30,6 +31,9 @@ router.post('/login', login);
 
 // Get user profile
 router.get('/profile', auth, getProfile);
+
+// Update user name
+router.put('/update-name', auth, updateUserName);
 
 // Password reset with OTP
 router.post('/forgot-password/send-otp', forgotPasswordSendOTP);

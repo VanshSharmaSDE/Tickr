@@ -16,18 +16,25 @@ import {
   FiGrid,
   FiList,
   FiZap,
-  FiZapOff
+  FiZapOff,
+  FiEdit2,
+  FiCheck,
+  FiXCircle
 } from 'react-icons/fi';
 import { useState, useEffect, useRef } from 'react';
 
 const Navbar = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, updateName } = useAuth();
   const { isDark, toggleTheme, isCardView, toggleViewMode, animationsEnabled, toggleAnimations, syncing } = useSettings();
   const location = useLocation();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [isUpdatingName, setIsUpdatingName] = useState(false);
   const settingsRef = useRef(null);
+  const nameInputRef = useRef(null);
 
   // Close settings dropdown when clicking outside
   useEffect(() => {
@@ -43,9 +50,51 @@ const Navbar = () => {
     };
   }, []);
 
+  // Focus name input when editing starts
+  useEffect(() => {
+    if (isEditingName && nameInputRef.current) {
+      nameInputRef.current.focus();
+      nameInputRef.current.select();
+    }
+  }, [isEditingName]);
+
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  const handleNameEdit = () => {
+    setNewName(user?.name || '');
+    setIsEditingName(true);
+  };
+
+  const handleNameCancel = () => {
+    setIsEditingName(false);
+    setNewName('');
+  };
+
+  const handleNameSave = async () => {
+    if (!newName.trim() || newName.trim() === user?.name) {
+      handleNameCancel();
+      return;
+    }
+
+    setIsUpdatingName(true);
+    const result = await updateName(newName.trim());
+    setIsUpdatingName(false);
+
+    if (result.success) {
+      setIsEditingName(false);
+      setNewName('');
+    }
+  };
+
+  const handleNameKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleNameSave();
+    } else if (e.key === 'Escape') {
+      handleNameCancel();
+    }
   };
 
   const isActive = (path) => {
@@ -103,12 +152,50 @@ const Navbar = () => {
 
           {/* Right side */}
           <div className="flex items-center space-x-4">
-            {/* User name */}
-            <div className="hidden md:flex items-center space-x-2 px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-700">
+            {/* User name - editable */}
+            <div className="hidden md:flex items-center space-x-2 px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 group overflow-hidden">
               <FiUser className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-              <span className="text-sm font-medium text-gray-900 dark:text-white">
-                {user?.name}
-              </span>
+              {isEditingName ? (
+                <div className="flex items-center space-x-2">
+                  <input
+                    ref={nameInputRef}
+                    type="text"
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    onKeyDown={handleNameKeyPress}
+                    className="text-sm font-medium text-gray-900 dark:text-white bg-transparent border-b border-gray-400 dark:border-gray-500 focus:outline-none focus:border-primary-500 min-w-0 w-32"
+                    disabled={isUpdatingName}
+                    maxLength={50}
+                    minLength={2}
+                  />
+                  <button
+                    onClick={handleNameSave}
+                    disabled={isUpdatingName || !newName.trim() || newName.trim().length < 2}
+                    className="p-1 rounded text-green-600 hover:text-green-700 disabled:text-gray-400 disabled:cursor-not-allowed"
+                  >
+                    <FiCheck className="w-3 h-3" />
+                  </button>
+                  <button
+                    onClick={handleNameCancel}
+                    disabled={isUpdatingName}
+                    className="p-1 rounded text-red-600 hover:text-red-700 disabled:text-gray-400 disabled:cursor-not-allowed"
+                  >
+                    <FiXCircle className="w-3 h-3" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center">
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">
+                    {user?.name}
+                  </span>
+                  <button
+                    onClick={handleNameEdit}
+                    className="ml-0 group-hover:ml-2 w-0 group-hover:w-6 p-1 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-all duration-200 ease-in-out overflow-hidden"
+                  >
+                    <FiEdit2 className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Settings dropdown */}
@@ -220,10 +307,48 @@ const Navbar = () => {
               })}
               
               <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-                {/* User name in mobile */}
-                <div className="flex items-center space-x-2 px-3 py-2 text-gray-900 dark:text-white mb-2">
+                {/* User name in mobile - editable */}
+                <div className="flex items-center space-x-2 px-3 py-2 text-gray-900 dark:text-white mb-2 group">
                   <FiUser className="w-4 h-4" />
-                  <span className="text-sm font-medium">{user?.name}</span>
+                  {isEditingName ? (
+                    <div className="flex items-center space-x-2 flex-1">
+                      <input
+                        ref={nameInputRef}
+                        type="text"
+                        value={newName}
+                        onChange={(e) => setNewName(e.target.value)}
+                        onKeyDown={handleNameKeyPress}
+                        className="text-sm font-medium text-gray-900 dark:text-white bg-transparent border-b border-gray-400 dark:border-gray-500 focus:outline-none focus:border-primary-500 flex-1 min-w-0"
+                        disabled={isUpdatingName}
+                        maxLength={50}
+                        minLength={2}
+                      />
+                      <button
+                        onClick={handleNameSave}
+                        disabled={isUpdatingName || !newName.trim() || newName.trim().length < 2}
+                        className="p-1 rounded text-green-600 hover:text-green-700 disabled:text-gray-400 disabled:cursor-not-allowed"
+                      >
+                        <FiCheck className="w-3 h-3" />
+                      </button>
+                      <button
+                        onClick={handleNameCancel}
+                        disabled={isUpdatingName}
+                        className="p-1 rounded text-red-600 hover:text-red-700 disabled:text-gray-400 disabled:cursor-not-allowed"
+                      >
+                        <FiXCircle className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center space-x-2 flex-1">
+                      <span className="text-sm font-medium">{user?.name}</span>
+                      <button
+                        onClick={handleNameEdit}
+                        className="ml-auto p-1 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                      >
+                        <FiEdit2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
                 </div>
                 
                 {/* Theme toggle in mobile */}

@@ -350,12 +350,61 @@ const resetPassword = async (req, res) => {
   }
 };
 
+// Update user name only
+const updateUserName = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { name } = req.body;
+
+    // Validate input
+    if (!name || typeof name !== 'string' || name.trim().length === 0) {
+      return res.status(400).json({ message: 'Please provide a valid name' });
+    }
+
+    // Trim and validate name length
+    const trimmedName = name.trim();
+    if (trimmedName.length < 2 || trimmedName.length > 50) {
+      return res.status(400).json({ message: 'Name must be between 2 and 50 characters' });
+    }
+
+    // Update user name
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { name: trimmedName },
+      { new: true, runValidators: true }
+    ).select('-password -emailVerificationOTP -emailVerificationOTPExpiry -passwordResetOTP -passwordResetOTPExpiry');
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json({
+      success: true,
+      message: 'Name updated successfully',
+      user: {
+        id: updatedUser._id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        isVerified: updatedUser.isVerified
+      }
+    });
+
+  } catch (error) {
+    console.error('Update name error:', error);
+    res.status(500).json({ 
+      message: 'Failed to update name',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
+  }
+};
+
 module.exports = {
   registerSendOTP,
   registerVerifyOTP,
   resendVerificationOTP,
   login,
   getProfile,
+  updateUserName,
   forgotPasswordSendOTP,
   forgotPasswordVerifyOTP,
   resendPasswordResetOTP,

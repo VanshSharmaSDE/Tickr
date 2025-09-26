@@ -493,9 +493,6 @@ const Analytics = () => {
                   <p className="text-sm font-medium text-gray-900 dark:text-white">
                     {taskRankings.summary.totalCompletions} total completions
                   </p>
-                  <p className="text-xs text-gray-600 dark:text-gray-400">
-                    {taskRankings.summary.tasksWithCompletions} / {taskRankings.summary.totalTasks} tasks completed
-                  </p>
                 </motion.div>
               )}
             </div>
